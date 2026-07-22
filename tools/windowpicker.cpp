@@ -17,12 +17,11 @@
  *
  */
 #include <QApplication>
-#include <QDesktopWidget>
 #include <QLabel>
 #include <QMouseEvent>
 #include <QPushButton>
 #include <QRubberBand>
-#include <QRubberBand>
+#include <QScreen>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -30,7 +29,7 @@
 #include <tools/os.h>
 
 #if defined(Q_OS_WIN)
-    #include <QtWin>
+    #include <QImage>
     #include <windows.h>
 
     #ifdef _WIN64
@@ -111,7 +110,7 @@ WindowPicker::WindowPicker() : QWidget(0), mCrosshair(":/icons/picker"), mWindow
     setLayout(l);
 
     resize(sizeHint());
-    move(QApplication::desktop()->screenGeometry(QApplication::desktop()->screenNumber(QCursor::pos())).center() - QPoint(width() / 2, height() / 2));
+    move(QGuiApplication::screenAt(QCursor::pos())->geometry().center() - QPoint(width() / 2, height() / 2));
     show();
 }
 
@@ -168,7 +167,7 @@ void WindowPicker::mouseMoveEvent(QMouseEvent *event)
     icon = (HICON)::GetClassLong((HWND)mCurrentWindow, GCL_HICON);
 
     if (icon != NULL) {
-        mWindowIcon->setPixmap(QtWin::fromHICON(icon));
+        mWindowIcon->setPixmap(QPixmap::fromImage(QImage::fromHICON(icon)));
     } else {
         mWindowIcon->setPixmap(QPixmap());
     }

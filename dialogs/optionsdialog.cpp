@@ -20,13 +20,13 @@
 #include <QCompleter>
 #include <QDate>
 #include <QDesktopServices>
-#include <QDesktopWidget>
 #include <QDirModel>
 #include <QFileDialog>
 #include <QKeyEvent>
 #include <QMessageBox>
 #include <QProcess>
 #include <QRegularExpression>
+#include <QScreen>
 #include <QSettings>
 #include <QTimer>
 #include <QUrl>
@@ -190,11 +190,7 @@ void OptionsDialog::loadSettings()
     ui.updaterCheckBox->setChecked(!settings()->value("disableUpdater", false).toBool());
     ui.magnifyCheckBox->setChecked(settings()->value("magnify", false).toBool());
 
-#ifdef Q_OS_WIN
-    ui.cursorCheckBox->setChecked(settings()->value("cursor", QSysInfo::WindowsVersion > QSysInfo::WV_XP).toBool());
-#else
     ui.cursorCheckBox->setChecked(settings()->value("cursor", true).toBool());
-#endif
 
     ui.saveAsCheckBox->setChecked(settings()->value("saveAs", false).toBool());
     ui.areaAutocloseCheckBox->setChecked(settings()->value("areaAutoclose", false).toBool());
@@ -397,7 +393,7 @@ bool OptionsDialog::event(QEvent *event)
         if (settings()->contains("geometry/optionsDialog")) {
             restoreGeometry(settings()->value("geometry/optionsDialog").toByteArray());
         } else {
-            move(QApplication::desktop()->screenGeometry(this).center() - rect().center());
+            move(screen()->geometry().center() - rect().center());
         }
     }
 

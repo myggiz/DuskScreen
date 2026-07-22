@@ -36,7 +36,7 @@ Updater::Updater(QObject *parent) :
 void Updater::check()
 {
 #ifdef Q_OS_WIN
-    QString platform = QString("Windows_%1").arg(QSysInfo::WindowsVersion);
+    QString platform = QString("Windows_%1").arg(QSysInfo::productVersion());
 #else
     QString platform = QSysInfo::productType();
 #endif

@@ -19,7 +19,6 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QDateTime>
-#include <QDesktopWidget>
 #include <QFileDialog>
 #include <QPainter>
 #include <QPixmap>
@@ -350,9 +349,13 @@ void Screenshot::grabDesktop()
     QPoint cursorPosition = QCursor::pos();
 
     if (mOptions.currentMonitor) {
-        int currentScreen = qApp->desktop()->screenNumber(cursorPosition);
+        QScreen *currentScreen = QGuiApplication::screenAt(cursorPosition);
 
-        geometry = qApp->desktop()->screen(currentScreen)->geometry();
+        if (!currentScreen) {
+            currentScreen = QGuiApplication::primaryScreen();
+        }
+
+        geometry = currentScreen->geometry();
         cursorPosition = cursorPosition - geometry.topLeft();
     } else {
         int top = 0;
@@ -374,14 +377,14 @@ void Screenshot::grabDesktop()
         cursorPosition.setY(cursorPosition.y() + top);
     }
 
-    mPixmap = QApplication::primaryScreen()->grabWindow(QApplication::desktop()->winId(), geometry.x(), geometry.y(), geometry.width(), geometry.height());
-    mPixmap.setDevicePixelRatio(QApplication::desktop()->devicePixelRatio());
+    mPixmap = QApplication::primaryScreen()->grabWindow(0, geometry.x(), geometry.y(), geometry.width(), geometry.height());
+    mPixmap.setDevicePixelRatio(QApplication::primaryScreen()->devicePixelRatio());
 
     if (mOptions.cursor && !mPixmap.isNull()) {
         QPainter painter(&mPixmap);
         auto cursorInfo = os::cursor();
         auto cursorPixmap = cursorInfo.first;
-        cursorPixmap.setDevicePixelRatio(QApplication::desktop()->devicePixelRatio()); 
+        cursorPixmap.setDevicePixelRatio(QApplication::primaryScreen()->devicePixelRatio());
 
 #if 0 // Debug cursor position helper
         painter.setBrush(QBrush(Qt::darkRed));

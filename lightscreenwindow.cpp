@@ -18,7 +18,6 @@
  */
 #include <QDate>
 #include <QDesktopServices>
-#include <QDesktopWidget>
 #include <QFileInfo>
 #include <QKeyEvent>
 #include <QMainWindow>
@@ -26,6 +25,7 @@
 #include <QMessageBox>
 #include <QPointer>
 #include <QProcess>
+#include <QScreen>
 #include <QSettings>
 #include <QSystemTrayIcon>
 #include <QTimer>
@@ -36,7 +36,6 @@
 
 #ifdef Q_OS_WIN
     #include <windows.h>
-    #include <QtWinExtras>
 #endif
 
 //
@@ -71,23 +70,6 @@ LightscreenWindow::LightscreenWindow(QWidget *parent) :
 
     ui.optionsPushButton->setIcon(os::icon("configure"));
     ui.folderPushButton->setIcon(os::icon("folder"));
-
-#ifdef Q_OS_WIN
-    if (QSysInfo::WindowsVersion >= QSysInfo::WV_WINDOWS7) {
-        mTaskbarButton = new QWinTaskbarButton(this);
-        mHasTaskbarButton = true;
-
-        if (QtWin::isCompositionEnabled()) {
-            setAttribute(Qt::WA_NoSystemBackground);
-            QtWin::enableBlurBehindWindow(this);
-            QtWin::extendFrameIntoClientArea(this, QMargins(-1, -1, -1, -1));
-        }
-    }
-
-    if (QSysInfo::WindowsVersion < QSysInfo::WV_WINDOWS7) {
-        ui.centralWidget->setStyleSheet("QPushButton { padding: 2px; border: 1px solid #acacac; background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 #eaeaea, stop:1 #e5e5e5);} QPushButton:hover { border: 1px solid #7eb4ea;	background-color: #e4f0fc; }");
-    }
-#endif
 
     setMinimumSize(size());
     setWindowFlags(windowFlags() ^ Qt::WindowMaximizeButtonHint);
@@ -777,7 +759,7 @@ bool LightscreenWindow::event(QEvent *event)
     if (event->type() == QEvent::Show) {
         QPoint savedPosition = settings()->value("position").toPoint();
 
-        if (!savedPosition.isNull() && qApp->desktop()->availableGeometry().contains(QRect(savedPosition, size()))) {
+        if (!savedPosition.isNull() && screen()->availableVirtualGeometry().contains(QRect(savedPosition, size()))) {
             move(savedPosition);
         }
 

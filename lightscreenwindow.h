@@ -31,7 +31,6 @@
 class Updater;
 class QSettings;
 class QProgressBar;
-class QWinTaskbarButton;
 class UGlobalHotkeys;
 class LightscreenWindow : public QMainWindow
 {
@@ -85,9 +84,6 @@ private:
     void connectHotkeys();
     void createTrayIcon();
 
-#ifdef Q_OS_WIN
-    bool winEvent(MSG *message, long *result);
-#endif
     // Convenience function
     QSettings *settings() const;
 
@@ -110,9 +106,10 @@ private:
 
     bool mHasTaskbarButton;
 
-#ifdef Q_OS_WIN
-    QPointer<QWinTaskbarButton> mTaskbarButton;
-#else
+    // Qt 6 dropped QtWinExtras / QWinTaskbarButton. The taskbar progress overlay is a
+    // cosmetic Windows-shell feature we no longer ship; this no-op keeps the call sites
+    // compiling on every platform without scattering #ifdefs. mHasTaskbarButton stays
+    // false, so the dummy is never actually dereferenced.
     class QWinTaskbarProgressDummy
     {
     public:
@@ -135,8 +132,7 @@ private:
         void setWindow(QWindow *w) { Q_UNUSED(w) }
     };
 
-    QWinTaskbarDummy *mTaskbarButton;
-#endif
+    QWinTaskbarDummy *mTaskbarButton = nullptr;
 };
 
 #endif // LIGHTSCREENWINDOW_H

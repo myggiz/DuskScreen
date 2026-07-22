@@ -19,11 +19,11 @@
 #include <QApplication>
 #include <QBitmap>
 #include <QDesktopServices>
-#include <QDesktopWidget>
 #include <QDialog>
 #include <QDir>
 #include <QGraphicsDropShadowEffect>
 #include <QIcon>
+#include <QImage>
 #include <QLibrary>
 #include <QLocale>
 #include <QMessageBox>
@@ -42,7 +42,6 @@
 #include <QPair>
 
 #ifdef Q_OS_WIN
-    #include <QtWin>
     #include <qt_windows.h>
     #include <ShlObj.h>
 
@@ -85,9 +84,10 @@ QPair<QPixmap, QPoint> os::cursor()
 
     if (::GetIconInfo(cursor, &info)) {
         if (info.hbmColor) {
-            pixmap = QtWin::fromHBITMAP(info.hbmColor, QtWin::HBitmapAlpha);
+            // Qt 6 replacement for QtWin::fromHBITMAP(.., HBitmapAlpha).
+            pixmap = QPixmap::fromImage(QImage::fromHBITMAP(info.hbmColor));
         } else {
-            QBitmap orig(QtWin::fromHBITMAP(info.hbmMask));
+            QBitmap orig(QPixmap::fromImage(QImage::fromHBITMAP(info.hbmMask)));
             QImage img = orig.toImage();
 
             int h = img.height() / 2;
@@ -234,7 +234,7 @@ QPixmap os::grabWindow(WId winId)
     ReleaseDC(hwndId, hdcMem);
     DeleteDC(hdcMem);
 
-    pixmap = QtWin::fromHBITMAP(hbmCapture);
+    pixmap = QPixmap::fromImage(QImage::fromHBITMAP(hbmCapture));
 
     DeleteObject(hbmCapture);
 
