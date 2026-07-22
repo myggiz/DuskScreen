@@ -42,7 +42,7 @@
 //
 //DuskScreen includes
 //
-#include <lightscreenwindow.h>
+#include <duskscreenwindow.h>
 #include <dialogs/optionsdialog.h>
 
 #include <tools/os.h>
@@ -66,7 +66,7 @@ static void playSoundFile(const QString &fileName)
     effect->play();
 }
 
-LightscreenWindow::LightscreenWindow(QWidget *parent) :
+DuskScreenWindow::DuskScreenWindow(QWidget *parent) :
     QMainWindow(parent),
     mDoCache(false),
     mHideTrigger(false),
@@ -90,12 +90,12 @@ LightscreenWindow::LightscreenWindow(QWidget *parent) :
     setWindowFlags(windowFlags() ^ Qt::WindowMaximizeButtonHint);
 
     // Actions
-    connect(ui.screenPushButton, &QPushButton::clicked, this, &LightscreenWindow::screenHotkey);
-    connect(ui.areaPushButton  , &QPushButton::clicked, this, &LightscreenWindow::areaHotkey);
-    connect(ui.windowPushButton, &QPushButton::clicked, this, &LightscreenWindow::windowPickerHotkey);
+    connect(ui.screenPushButton, &QPushButton::clicked, this, &DuskScreenWindow::screenHotkey);
+    connect(ui.areaPushButton  , &QPushButton::clicked, this, &DuskScreenWindow::areaHotkey);
+    connect(ui.windowPushButton, &QPushButton::clicked, this, &DuskScreenWindow::windowPickerHotkey);
 
-    connect(ui.optionsPushButton, &QPushButton::clicked, this, &LightscreenWindow::showOptions);
-    connect(ui.folderPushButton , &QPushButton::clicked, this, &LightscreenWindow::goToFolder);
+    connect(ui.optionsPushButton, &QPushButton::clicked, this, &DuskScreenWindow::showOptions);
+    connect(ui.folderPushButton , &QPushButton::clicked, this, &DuskScreenWindow::goToFolder);
 
     // Shortcuts
     mGlobalHotkeys = new UGlobalHotkeys(this);
@@ -105,26 +105,26 @@ LightscreenWindow::LightscreenWindow(QWidget *parent) :
     });
 
     // Manager
-    connect(ScreenshotManager::instance(), &ScreenshotManager::confirm,           this, &LightscreenWindow::preview);
-    connect(ScreenshotManager::instance(), &ScreenshotManager::windowCleanup,     this, &LightscreenWindow::cleanup);
-    connect(ScreenshotManager::instance(), &ScreenshotManager::activeCountChange, this, &LightscreenWindow::updateStatus);
+    connect(ScreenshotManager::instance(), &ScreenshotManager::confirm,           this, &DuskScreenWindow::preview);
+    connect(ScreenshotManager::instance(), &ScreenshotManager::windowCleanup,     this, &DuskScreenWindow::cleanup);
+    connect(ScreenshotManager::instance(), &ScreenshotManager::activeCountChange, this, &DuskScreenWindow::updateStatus);
 
     if (!settings()->contains("file/format")) {
         showOptions();  // There are no options (or the options config is invalid or incomplete)
     } else {
-        QTimer::singleShot(0   , this, &LightscreenWindow::applySettings);
-        QTimer::singleShot(5000, this, &LightscreenWindow::checkForUpdates);
+        QTimer::singleShot(0   , this, &DuskScreenWindow::applySettings);
+        QTimer::singleShot(5000, this, &DuskScreenWindow::checkForUpdates);
     }
 }
 
-LightscreenWindow::~LightscreenWindow()
+DuskScreenWindow::~DuskScreenWindow()
 {
     settings()->setValue("lastScreenshot", mLastScreenshot);
     settings()->sync();
     mGlobalHotkeys->unregisterAllHotkeys();
 }
 
-void LightscreenWindow::action(int mode)
+void DuskScreenWindow::action(int mode)
 {
     if (mode <= Screenshot::SelectedWindow) {
         screenshotAction((Screenshot::Mode)mode);
@@ -137,12 +137,12 @@ void LightscreenWindow::action(int mode)
     }
 }
 
-void LightscreenWindow::areaHotkey()
+void DuskScreenWindow::areaHotkey()
 {
     screenshotAction(Screenshot::SelectedArea);
 }
 
-void LightscreenWindow::checkForUpdates()
+void DuskScreenWindow::checkForUpdates()
 {
     if (settings()->value("options/disableUpdater", false).toBool()) {
         return;
@@ -155,11 +155,11 @@ void LightscreenWindow::checkForUpdates()
 
     mUpdater = new Updater(this);
 
-    connect(mUpdater, &Updater::done, this, &LightscreenWindow::updaterDone);
+    connect(mUpdater, &Updater::done, this, &DuskScreenWindow::updaterDone);
     mUpdater->check();
 }
 
-void LightscreenWindow::cleanup(const Screenshot::Options &options)
+void DuskScreenWindow::cleanup(const Screenshot::Options &options)
 {
     // Reversing settings
     if (settings()->value("options/hide").toBool()) {
@@ -201,7 +201,7 @@ void LightscreenWindow::cleanup(const Screenshot::Options &options)
     mLastScreenshot = options.fileName;
 }
 
-void LightscreenWindow::closeToTrayWarning()
+void DuskScreenWindow::closeToTrayWarning()
 {
     if (!settings()->value("options/closeToTrayWarning", true).toBool()) {
         return;
@@ -212,7 +212,7 @@ void LightscreenWindow::closeToTrayWarning()
     settings()->setValue("options/closeToTrayWarning", false);
 }
 
-bool LightscreenWindow::closingWithoutTray()
+bool DuskScreenWindow::closingWithoutTray()
 {
     if (settings()->value("options/disableHideAlert", false).toBool()) {
         return false;
@@ -249,7 +249,7 @@ bool LightscreenWindow::closingWithoutTray()
     return false; // Cancel.
 }
 
-void LightscreenWindow::goToFolder()
+void DuskScreenWindow::goToFolder()
 {
 #ifdef Q_OS_WIN
     if (!mLastScreenshot.isEmpty() && QFile::exists(mLastScreenshot)) {
@@ -273,16 +273,16 @@ void LightscreenWindow::goToFolder()
 #endif
 }
 
-void LightscreenWindow::messageClicked()
+void DuskScreenWindow::messageClicked()
 {
     if (mLastMessage == 1) {
         goToFolder();
     } else if (mLastMessage == 3) {
-        QTimer::singleShot(0, this, &LightscreenWindow::showOptions);
+        QTimer::singleShot(0, this, &DuskScreenWindow::showOptions);
     }
 }
 
-void LightscreenWindow::executeArgument(const QString &message)
+void DuskScreenWindow::executeArgument(const QString &message)
 {
     if (message == "--wake") {
         show();
@@ -305,7 +305,7 @@ void LightscreenWindow::executeArgument(const QString &message)
     }
 }
 
-void LightscreenWindow::executeArguments(const QStringList &arguments)
+void DuskScreenWindow::executeArguments(const QStringList &arguments)
 {
     // If we just have the default argument, call "--wake"
     if (arguments.count() == 1 && (arguments.at(0) == qApp->arguments().at(0) || arguments.at(0).contains(QFileInfo(qApp->applicationFilePath()).fileName()))) {
@@ -318,7 +318,7 @@ void LightscreenWindow::executeArguments(const QStringList &arguments)
     }
 }
 
-void LightscreenWindow::notify(const Screenshot::Result &result)
+void DuskScreenWindow::notify(const Screenshot::Result &result)
 {
     switch (result) {
     case Screenshot::Success:
@@ -344,15 +344,15 @@ void LightscreenWindow::notify(const Screenshot::Result &result)
         break;
     }
 
-    QTimer::singleShot(2000, this, &LightscreenWindow::restoreNotification);
+    QTimer::singleShot(2000, this, &DuskScreenWindow::restoreNotification);
 }
 
-void LightscreenWindow::preview(Screenshot *screenshot)
+void DuskScreenWindow::preview(Screenshot *screenshot)
 {
     screenshot->confirm(true);
 }
 
-void LightscreenWindow::quit()
+void DuskScreenWindow::quit()
 {
     settings()->setValue("position", pos());
 
@@ -376,7 +376,7 @@ void LightscreenWindow::quit()
     }
 }
 
-void LightscreenWindow::restoreNotification()
+void DuskScreenWindow::restoreNotification()
 {
     if (mTrayIcon) {
         mTrayIcon->setIcon(QIcon(":/icons/lightscreen.small"));
@@ -392,7 +392,7 @@ void LightscreenWindow::restoreNotification()
     updateStatus();
 }
 
-void LightscreenWindow::screenshotAction(Screenshot::Mode mode)
+void DuskScreenWindow::screenshotAction(Screenshot::Mode mode)
 {
     int delayms = -1;
 
@@ -475,17 +475,17 @@ void LightscreenWindow::screenshotAction(Screenshot::Mode mode)
     ScreenshotManager::instance()->take(options);
 }
 
-void LightscreenWindow::screenshotActionTriggered(QAction *action)
+void DuskScreenWindow::screenshotActionTriggered(QAction *action)
 {
     screenshotAction(action->data().value<Screenshot::Mode>());
 }
 
-void LightscreenWindow::screenHotkey()
+void DuskScreenWindow::screenHotkey()
 {
     screenshotAction(Screenshot::WholeScreen);
 }
 
-void LightscreenWindow::showHotkeyError(const QStringList &hotkeys)
+void DuskScreenWindow::showHotkeyError(const QStringList &hotkeys)
 {
     static bool dontShow = false;
 
@@ -523,7 +523,7 @@ void LightscreenWindow::showHotkeyError(const QStringList &hotkeys)
 
     if (msgBox.clickedButton() == exitButton) {
         dontShow = true;
-        QTimer::singleShot(10, this, &LightscreenWindow::quit);
+        QTimer::singleShot(10, this, &DuskScreenWindow::quit);
     } else if (msgBox.clickedButton() == changeButton) {
         showOptions();
     } else if (msgBox.clickedButton() == disableButton) {
@@ -533,7 +533,7 @@ void LightscreenWindow::showHotkeyError(const QStringList &hotkeys)
     }
 }
 
-void LightscreenWindow::showOptions()
+void DuskScreenWindow::showOptions()
 {
     mGlobalHotkeys->unregisterAllHotkeys();
     QPointer<OptionsDialog> optionsDialog = new OptionsDialog(this);
@@ -544,7 +544,7 @@ void LightscreenWindow::showOptions()
     applySettings();
 }
 
-void LightscreenWindow::showScreenshotMessage(const Screenshot::Result &result, const QString &fileName)
+void DuskScreenWindow::showScreenshotMessage(const Screenshot::Result &result, const QString &fileName)
 {
     if (result == Screenshot::Cancel) {
         return;
@@ -571,7 +571,7 @@ void LightscreenWindow::showScreenshotMessage(const Screenshot::Result &result, 
     mTrayIcon->showMessage(title, message);
 }
 
-void LightscreenWindow::toggleVisibility()
+void DuskScreenWindow::toggleVisibility()
 {
     if (isVisible()) {
         hide();
@@ -581,7 +581,7 @@ void LightscreenWindow::toggleVisibility()
     }
 }
 
-void LightscreenWindow::updateStatus()
+void DuskScreenWindow::updateStatus()
 {
     int activeCount = ScreenshotManager::instance()->activeCount();
 
@@ -603,7 +603,7 @@ void LightscreenWindow::updateStatus()
     }
 }
 
-void LightscreenWindow::updaterDone(bool result)
+void DuskScreenWindow::updaterDone(bool result)
 {
     mUpdater->deleteLater();
 
@@ -633,17 +633,17 @@ void LightscreenWindow::updaterDone(bool result)
     }
 }
 
-void LightscreenWindow::windowHotkey()
+void DuskScreenWindow::windowHotkey()
 {
     screenshotAction(Screenshot::ActiveWindow);
 }
 
-void LightscreenWindow::windowPickerHotkey()
+void DuskScreenWindow::windowPickerHotkey()
 {
     screenshotAction(Screenshot::SelectedWindow);
 }
 
-void LightscreenWindow::applySettings()
+void DuskScreenWindow::applySettings()
 {
     bool tray = settings()->value("options/tray", true).toBool();
 
@@ -665,7 +665,7 @@ void LightscreenWindow::applySettings()
     os::setStartup(settings()->value("options/startup").toBool(), settings()->value("options/startupHide").toBool());
 }
 
-void LightscreenWindow::connectHotkeys()
+void DuskScreenWindow::connectHotkeys()
 {
     const QStringList actions = {"screen", "window", "area", "windowPicker", "open", "directory"};
     QStringList failed;
@@ -686,19 +686,19 @@ void LightscreenWindow::connectHotkeys()
     }
 }
 
-void LightscreenWindow::createTrayIcon()
+void DuskScreenWindow::createTrayIcon()
 {
     mTrayIcon = new QSystemTrayIcon(QIcon(":/icons/lightscreen.small"), this);
     updateStatus();
 
-    connect(mTrayIcon, &QSystemTrayIcon::messageClicked, this, &LightscreenWindow::messageClicked);
+    connect(mTrayIcon, &QSystemTrayIcon::messageClicked, this, &DuskScreenWindow::messageClicked);
     connect(mTrayIcon, &QSystemTrayIcon::activated     , this, [&](QSystemTrayIcon::ActivationReason reason) {
         if (reason != QSystemTrayIcon::DoubleClick) return;
         toggleVisibility();
     });
 
     auto hideAction = new QAction(QIcon(":/icons/lightscreen.small"), tr("Show&/Hide"), mTrayIcon);
-    connect(hideAction, &QAction::triggered, this, &LightscreenWindow::toggleVisibility);
+    connect(hideAction, &QAction::triggered, this, &DuskScreenWindow::toggleVisibility);
 
     auto screenAction = new QAction(os::icon("screen"), tr("&Screen"), mTrayIcon);
     screenAction->setData(QVariant::fromValue<Screenshot::Mode>(Screenshot::WholeScreen));
@@ -718,16 +718,16 @@ void LightscreenWindow::createTrayIcon()
     screenshotGroup->addAction(windowAction);
     screenshotGroup->addAction(windowPickerAction);
 
-    connect(screenshotGroup, &QActionGroup::triggered, this, &LightscreenWindow::screenshotActionTriggered);
+    connect(screenshotGroup, &QActionGroup::triggered, this, &DuskScreenWindow::screenshotActionTriggered);
 
     auto optionsAction = new QAction(os::icon("configure"), tr("View &Options"), mTrayIcon);
-    connect(optionsAction, &QAction::triggered, this, &LightscreenWindow::showOptions);
+    connect(optionsAction, &QAction::triggered, this, &DuskScreenWindow::showOptions);
 
     auto goAction = new QAction(os::icon("folder"), tr("&Go to Folder"), mTrayIcon);
-    connect(goAction, &QAction::triggered, this, &LightscreenWindow::goToFolder);
+    connect(goAction, &QAction::triggered, this, &DuskScreenWindow::goToFolder);
 
     auto quitAction = new QAction(tr("&Quit"), mTrayIcon);
-    connect(quitAction, &QAction::triggered, this, &LightscreenWindow::quit);
+    connect(quitAction, &QAction::triggered, this, &DuskScreenWindow::quit);
 
     auto screenshotMenu = new QMenu(tr("Screenshot"));
     screenshotMenu->addAction(screenAction);
@@ -747,7 +747,7 @@ void LightscreenWindow::createTrayIcon()
     mTrayIcon->setContextMenu(trayIconMenu);
 }
 
-void LightscreenWindow::setStatus(QString status)
+void DuskScreenWindow::setStatus(QString status)
 {
     if (status.isEmpty()) {
         status = tr("DuskScreen");
@@ -762,13 +762,13 @@ void LightscreenWindow::setStatus(QString status)
     setWindowTitle(status);
 }
 
-QSettings *LightscreenWindow::settings() const
+QSettings *DuskScreenWindow::settings() const
 {
     return ScreenshotManager::instance()->settings();
 }
 
 // Event handling
-bool LightscreenWindow::event(QEvent *event)
+bool DuskScreenWindow::event(QEvent *event)
 {
     if (event->type() == QEvent::Show) {
         QPoint savedPosition = settings()->value("position").toPoint();

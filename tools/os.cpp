@@ -279,7 +279,7 @@ void os::setStartup(bool startup, bool hide)
 #endif
 
 #if defined(Q_OS_LINUX)
-    QFile desktopFile(QDir::homePath() + "/.config/autostart/lightscreen.desktop");
+    QFile desktopFile(QDir::homePath() + "/.config/autostart/duskscreen.desktop");
 
     desktopFile.remove();
 

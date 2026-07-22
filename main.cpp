@@ -22,7 +22,7 @@
 #include <tools/os.h>
 #include "tools/SingleApplication/singleapplication.h"
 
-#include <lightscreenwindow.h>
+#include <duskscreenwindow.h>
 
 int main(int argc, char *argv[])
 {
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
     application.setQuitOnLastWindowClosed(false);
 
-    LightscreenWindow lightscreen;
+    DuskScreenWindow lightscreen;
 
     if (application.arguments().size() > 1) {
         lightscreen.executeArguments(application.arguments());
@@ -46,8 +46,8 @@ int main(int argc, char *argv[])
         lightscreen.show();
     }
 
-    QObject::connect(&application, &SingleApplication::instanceArguments, &lightscreen, &LightscreenWindow::executeArguments);
-    QObject::connect(&lightscreen, &LightscreenWindow::finished, &application, &SingleApplication::quit);
+    QObject::connect(&application, &SingleApplication::instanceArguments, &lightscreen, &DuskScreenWindow::executeArguments);
+    QObject::connect(&lightscreen, &DuskScreenWindow::finished, &application, &SingleApplication::quit);
 
     return application.exec();
 }

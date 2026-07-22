@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>LightscreenWindowClass</class>
- <widget class="QMainWindow" name="LightscreenWindowClass">
+ <class>DuskScreenWindowClass</class>
+ <widget class="QMainWindow" name="DuskScreenWindowClass">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -26,7 +26,7 @@
    <string>DuskScreen</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="lightscreen.qrc">
+   <iconset resource="duskscreen.qrc">
     <normaloff>:/icons/lightscreen</normaloff>:/icons/lightscreen</iconset>
   </property>
   <property name="animated">
@@ -225,7 +225,7 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="lightscreen.qrc"/>
+  <include location="duskscreen.qrc"/>
  </resources>
  <connections/>
 </ui>

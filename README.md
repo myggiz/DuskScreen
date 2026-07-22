@@ -24,7 +24,7 @@ ported to **Qt 6** and slimmed down to a focused capture-to-disk tool.
 Requires **Qt 6.x** (tested with 6.11, MinGW 13) and `qmake`:
 
 ```bash
-qmake lightscreen.pro
+qmake duskscreen.pro
 mingw32-make            # or nmake / jom for an MSVC kit
 ```
 
