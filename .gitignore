@@ -1,6 +1,7 @@
 *.2-pre1
 *.autosave
-*.pro.*release/
+*.pro.*
+release/
 debug/
 Makefile*
 .qmake.stash
