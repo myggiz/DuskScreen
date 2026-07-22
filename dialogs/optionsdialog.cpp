@@ -498,8 +498,9 @@ void OptionsDialog::init()
     ui.browsePushButton->setIcon(os::icon("folder"));
     ui.namingOptionsButton->setIcon(os::icon("configure"));
 
-    // Export/Import menu .
-    QMenu *optionsMenu = new QMenu(tr("Options"));
+    // Export/Import menu. Parented to the dialog: QPushButton::setMenu() does NOT take
+    // ownership, so without a parent this menu (and its actions) leaked on every open.
+    QMenu *optionsMenu = new QMenu(tr("Options"), this);
 
     QAction *exportAction = new QAction(tr("&Export.."), optionsMenu);
     connect(exportAction, &QAction::triggered, this, &OptionsDialog::exportSettings);

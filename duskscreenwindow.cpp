@@ -735,7 +735,7 @@ void DuskScreenWindow::createTrayIcon()
     screenshotMenu->addAction(windowAction);
     screenshotMenu->addAction(windowPickerAction);
 
-    auto trayIconMenu = new QMenu;
+    auto trayIconMenu = new QMenu(this);
     trayIconMenu->addAction(hideAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addMenu(screenshotMenu);
