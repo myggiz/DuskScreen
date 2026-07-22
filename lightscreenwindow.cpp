@@ -40,7 +40,7 @@
 #endif
 
 //
-//Lightscreen includes
+//DuskScreen includes
 //
 #include <lightscreenwindow.h>
 #include <dialogs/optionsdialog.h>
@@ -208,7 +208,7 @@ void LightscreenWindow::closeToTrayWarning()
     }
 
     mLastMessage = 3;
-    mTrayIcon->showMessage(tr("Closed to tray"), tr("Lightscreen will keep running, you can disable this in the options menu."));
+    mTrayIcon->showMessage(tr("Closed to tray"), tr("DuskScreen will keep running, you can disable this in the options menu."));
     settings()->setValue("options/closeToTrayWarning", false);
 }
 
@@ -219,8 +219,8 @@ bool LightscreenWindow::closingWithoutTray()
     }
 
     QMessageBox msgBox;
-    msgBox.setWindowTitle(tr("Lightscreen"));
-    msgBox.setText(tr("You have chosen to hide Lightscreen when there's no system tray icon, so you will not be able to access the program <b>unless you have selected a hotkey to do so</b>.<br>What do you want to do?"));
+    msgBox.setWindowTitle(tr("DuskScreen"));
+    msgBox.setText(tr("You have chosen to hide DuskScreen when there's no system tray icon, so you will not be able to access the program <b>unless you have selected a hotkey to do so</b>.<br>What do you want to do?"));
     msgBox.setIcon(QMessageBox::Warning);
 
     msgBox.setStyleSheet("QPushButton { padding: 4px 8px; }");
@@ -366,7 +366,7 @@ void LightscreenWindow::quit()
     if (!doing.isEmpty()) {
         answer = QMessageBox::question(this,
                                        tr("Are you sure you want to quit?"),
-                                       tr("Lightscreen is currently %1 screenshots. Are you sure you want to quit?").arg(doing),
+                                       tr("DuskScreen is currently %1 screenshots. Are you sure you want to quit?").arg(doing),
                                        tr("Quit"),
                                        tr("Don't Quit"));
     }
@@ -512,7 +512,7 @@ void LightscreenWindow::showHotkeyError(const QStringList &hotkeys)
     messageText += tr("<br><i>What do you want to do?</i>");
 
     QMessageBox msgBox(this);
-    msgBox.setWindowTitle(tr("Lightscreen"));
+    msgBox.setWindowTitle(tr("DuskScreen"));
     msgBox.setText(messageText);
 
     QPushButton *changeButton  = msgBox.addButton(tr("Change") , QMessageBox::ActionRole);
@@ -614,8 +614,8 @@ void LightscreenWindow::updaterDone(bool result)
     }
 
     QMessageBox msgBox;
-    msgBox.setWindowTitle(tr("Lightscreen"));
-    msgBox.setText(tr("There's a new version of Lightscreen available.<br>Would you like to see more information?<br>(<em>You can turn this notification off</em>)"));
+    msgBox.setWindowTitle(tr("DuskScreen"));
+    msgBox.setText(tr("There's a new version of DuskScreen available.<br>Would you like to see more information?<br>(<em>You can turn this notification off</em>)"));
     msgBox.setIcon(QMessageBox::Information);
 
     QPushButton *yesButton     = msgBox.addButton(QMessageBox::Yes);
@@ -627,7 +627,7 @@ void LightscreenWindow::updaterDone(bool result)
     msgBox.exec();
 
     if (msgBox.clickedButton() == yesButton) {
-        QDesktopServices::openUrl(QUrl("https://lightscreen.com.ar/whatsnew?from=" + qApp->applicationVersion()));
+        QDesktopServices::openUrl(QUrl(QString(APP_URL "/whatsnew?from=") + qApp->applicationVersion()));
     } else if (msgBox.clickedButton() == turnOffButton) {
         settings()->setValue("options/disableUpdater", true);
     }
@@ -750,9 +750,9 @@ void LightscreenWindow::createTrayIcon()
 void LightscreenWindow::setStatus(QString status)
 {
     if (status.isEmpty()) {
-        status = tr("Lightscreen");
+        status = tr("DuskScreen");
     } else {
-        status += tr(" - Lightscreen");
+        status += tr(" - DuskScreen");
     }
 
     if (mTrayIcon) {

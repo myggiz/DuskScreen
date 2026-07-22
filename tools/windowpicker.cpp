@@ -53,7 +53,7 @@ WindowPicker::WindowPicker() : QWidget(0), mCrosshair(":/icons/picker"), mWindow
     setWindowFlags(Qt::WindowStaysOnTopHint);
 #endif
 
-    setWindowTitle(tr("Lightscreen Window Picker"));
+    setWindowTitle(tr("DuskScreen Window Picker"));
     setStyleSheet("QWidget { color: #000; } #frame { padding: 7px 10px; border: 4px solid #232323; background-color: rgba(250, 250, 250, 255); }");
 
     QLabel *helpLabel = new QLabel(tr("Grab the window picker by clicking and holding down the mouse button, then drag it to the window of your choice and release it to capture."), this);

@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Naming Options - Lightscreen</string>
+   <string>Naming Options - DuskScreen</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="leftMargin">
@@ -141,7 +141,7 @@
              <string notr="true">margin-left: 4px</string>
             </property>
             <property name="text">
-             <string notr="true"> &lt;a href=&quot;https://lightscreen.com.ar/help#date&quot;&gt;[?]&lt;/a&gt;</string>
+             <string notr="true"> &lt;a href=&quot;https://duskscreen.myggiz.net/help#date&quot;&gt;[?]&lt;/a&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>

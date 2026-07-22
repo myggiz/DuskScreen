@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET = lightscreen
+TARGET = duskscreen
 DEFINES += QT_DEPRECATED_WARNINGS
 
 HEADERS += dialogs/areadialog.h \

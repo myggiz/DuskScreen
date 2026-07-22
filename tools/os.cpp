@@ -269,9 +269,9 @@ void os::setStartup(bool startup, bool hide)
     init.beginGroup("Run");
 
     if (startup) {
-        init.setValue("Lightscreen", lightscreen);
+        init.setValue("DuskScreen", lightscreen);
     } else {
-        init.remove("Lightscreen");
+        init.remove("DuskScreen");
     }
 
     init.endGroup();

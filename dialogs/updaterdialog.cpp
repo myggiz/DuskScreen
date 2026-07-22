@@ -29,7 +29,7 @@
 UpdaterDialog::UpdaterDialog(QWidget *parent) :
     QProgressDialog("", tr("Cancel"), 0, 0, parent)
 {
-    setWindowTitle(tr("Updater - Lightscreen"));
+    setWindowTitle(tr("Updater - DuskScreen"));
     setWindowFlags(windowFlags() ^ Qt::WindowContextHelpButtonHint);
     setAutoClose(false);
 
@@ -47,7 +47,7 @@ UpdaterDialog::UpdaterDialog(QWidget *parent) :
 void UpdaterDialog::updateDone(bool result)
 {
     if (result) {
-        setLabelText(tr("There's a new version available,<br> please see <a href=\"https://lightscreen.com.ar/whatsnew/%1\">the Lighscreen website</a>.").arg(qApp->applicationVersion()));
+        setLabelText(tr("There's a new version available,<br> please see <a href=\"%1\">the DuskScreen website</a>.").arg(QString(APP_URL "/whatsnew/") + qApp->applicationVersion()));
     } else {
         setLabelText(tr("No new versions available."));
     }

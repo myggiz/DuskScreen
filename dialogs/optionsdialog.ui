@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Options - Lightscreen</string>
+   <string>Options - DuskScreen</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_4">
    <item>
@@ -321,7 +321,7 @@ Quality is related to file size and of course to readability and overall quality
              <string/>
             </property>
             <property name="text">
-             <string>&amp;Run Lightscreen at system startup.</string>
+             <string>&amp;Run DuskScreen at system startup.</string>
             </property>
            </widget>
           </item>
@@ -479,7 +479,7 @@ Quality is related to file size and of course to readability and overall quality
        <item>
         <widget class="QGroupBox" name="controlGroupBox">
          <property name="title">
-          <string>Lightscreen Control</string>
+          <string>DuskScreen Control</string>
          </property>
          <property name="flat">
           <bool>true</bool>
@@ -644,7 +644,7 @@ Quality is related to file size and of course to readability and overall quality
               <item>
                <widget class="QCheckBox" name="hideCheckBox">
                 <property name="text">
-                 <string>&amp;Hide Lightscreen while taking a screenshot.</string>
+                 <string>&amp;Hide DuskScreen while taking a screenshot.</string>
                 </property>
                </widget>
               </item>
@@ -919,7 +919,7 @@ Quality is related to file size and of course to readability and overall quality
               <item>
                <widget class="QCheckBox" name="clipboardCheckBox">
                 <property name="whatsThis">
-                 <string>Lightscreen will copy the screenshot image data to your clipboard.
+                 <string>DuskScreen will copy the screenshot image data to your clipboard.
 
 Warning: Cannot be used in tandem with the &quot;After uploading, copy the URL to the clipboard.&quot; option</string>
                 </property>
@@ -956,7 +956,7 @@ Warning: Cannot be used in tandem with the &quot;After uploading, copy the URL t
               <item row="0" column="0">
                <widget class="QCheckBox" name="updaterCheckBox">
                 <property name="whatsThis">
-                 <string>Every 7 days Lightscreen will ping the update server for a new version and notify you if there's an update to download.</string>
+                 <string>Every 7 days DuskScreen will ping the update server for a new version and notify you if there's an update to download.</string>
                 </property>
                 <property name="text">
                  <string>Check for updates regularly.</string>
@@ -987,8 +987,8 @@ Warning: Cannot be used in tandem with the &quot;After uploading, copy the URL t
        <item>
         <widget class="QLabel" name="mainLabel">
          <property name="text">
-          <string>Lightscreen is a simple tool to take screenshots, designed to be customizable and lightweight.&lt;br&gt;&lt;br&gt;
-Created by &lt;a href=&quot;https://ckaiser.com.ar&quot;&gt;Christian Kaiser&lt;/a&gt;, with &lt;a href=&quot;#aboutqt&quot;&gt;Qt&lt;/a&gt;.</string>
+          <string>DuskScreen is a simple tool to take screenshots, designed to be customizable and lightweight.&lt;br&gt;&lt;br&gt;
+A fork of Lightscreen by &lt;a href=&quot;https://ckaiser.com.ar&quot;&gt;Christian Kaiser&lt;/a&gt;, with &lt;a href=&quot;#aboutqt&quot;&gt;Qt&lt;/a&gt;.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -1025,7 +1025,7 @@ Created by &lt;a href=&quot;https://ckaiser.com.ar&quot;&gt;Christian Kaiser&lt;
        <item>
         <widget class="QLabel" name="linksLabel">
          <property name="text">
-          <string>&lt;a href=&quot;https://github.com/ckaiser/Lightscreen/&quot;&gt;GitHub page&lt;/a&gt;&lt;br&gt;&lt;br&gt;&lt;a href=&quot;https://lightscreen.com.ar/&quot;&gt;Lightscreen home page&lt;/a&gt;</string>
+          <string>&lt;a href=&quot;https://github.com/Myggiz/DuskScreen/&quot;&gt;GitHub page&lt;/a&gt;&lt;br&gt;&lt;br&gt;&lt;a href=&quot;https://duskscreen.myggiz.net/&quot;&gt;DuskScreen home page&lt;/a&gt;</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>

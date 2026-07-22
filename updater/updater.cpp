@@ -41,7 +41,7 @@ void Updater::check()
     QString platform = QSysInfo::productType();
 #endif
 
-    QNetworkRequest request(QUrl::fromUserInput("https://lightscreen.com.ar/version?from=" + qApp->applicationVersion() + "&platform=" + platform));
+    QNetworkRequest request(QUrl::fromUserInput(QString(APP_URL "/version?from=") + qApp->applicationVersion() + "&platform=" + platform));
     mNetwork.get(request);
 }
 

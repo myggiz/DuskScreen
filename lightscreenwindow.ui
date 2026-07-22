@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Lightscreen</string>
+   <string>DuskScreen</string>
   </property>
   <property name="windowIcon">
    <iconset resource="lightscreen.qrc">
@@ -143,7 +143,7 @@
          </size>
         </property>
         <property name="toolTip">
-         <string>Configure Lightscreen</string>
+         <string>Configure DuskScreen</string>
         </property>
         <property name="text">
          <string>&amp;Options</string>

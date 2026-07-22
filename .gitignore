@@ -11,5 +11,5 @@ build_errors.log
 ui_*.h
 moc_*.cpp
 qrc_*.cpp
-lightscreen_resource.rc
+*_resource.rc
 dist/

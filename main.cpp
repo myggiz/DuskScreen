@@ -30,8 +30,8 @@ int main(int argc, char *argv[])
     qSetMessagePattern("%{message} @%{line}[%{function}()]");
 #endif
 
-    QApplication::setOrganizationName("K");
-    QApplication::setApplicationName("Lightscreen");
+    QApplication::setOrganizationName("Myggiz");
+    QApplication::setApplicationName("DuskScreen");
     QApplication::setApplicationVersion(APP_VERSION);
 
     SingleApplication application(argc, argv);

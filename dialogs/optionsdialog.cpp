@@ -111,7 +111,7 @@ void OptionsDialog::exportSettings()
     QString exportFileName = QFileDialog::getSaveFileName(this,
                              tr("Export Settings"),
                              QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + QDir::separator() + "config.ini",
-                             tr("Lightscreen Settings (*.ini)"));
+                             tr("DuskScreen Settings (*.ini)"));
 
     if (exportFileName.isEmpty()) {
         return;
@@ -133,7 +133,7 @@ void OptionsDialog::importSettings()
     QString importFileName = QFileDialog::getOpenFileName(this,
                              tr("Import Settings"),
                              QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
-                             tr("Lightscreen Settings (*.ini)"));
+                             tr("DuskScreen Settings (*.ini)"));
 
     QSettings importedSettings(importFileName, QSettings::IniFormat);
 
@@ -444,7 +444,7 @@ void OptionsDialog::dialogButtonClicked(QAbstractButton *button)
 void OptionsDialog::restoreDefaults()
 {
     QMessageBox msgBox;
-    msgBox.setWindowTitle(tr("Lightscreen - Restore Default Options"));
+    msgBox.setWindowTitle(tr("DuskScreen - Restore Default Options"));
     msgBox.setText(tr("Restoring the default options will cause you to lose all of your current configuration."));
     msgBox.setIcon(QMessageBox::Warning);
 
