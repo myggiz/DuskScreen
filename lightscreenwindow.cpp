@@ -253,7 +253,11 @@ void LightscreenWindow::goToFolder()
 {
 #ifdef Q_OS_WIN
     if (!mLastScreenshot.isEmpty() && QFile::exists(mLastScreenshot)) {
-        QProcess::startDetached("explorer /select, \"" + mLastScreenshot + "\"");
+        // Reveal the file in Explorer with it selected. The "/select," switch and the
+        // path must be a SINGLE argument (comma glued to a native-separator path);
+        // Qt 6's deprecated string-splitting startDetached() would break them apart,
+        // making Explorer just open the file in the default image viewer instead.
+        QProcess::startDetached("explorer.exe", { "/select," + QDir::toNativeSeparators(mLastScreenshot) });
     } else {
 #endif
         QDir path(settings()->value("file/target").toString());
