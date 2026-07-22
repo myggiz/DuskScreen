@@ -123,49 +123,68 @@
       </property>
      </widget>
     </item>
-    <item row="1" column="0">
-     <widget class="QPushButton" name="optionsPushButton">
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>26</height>
-       </size>
+    <item row="1" column="0" colspan="3">
+     <layout class="QHBoxLayout" name="bottomButtonLayout">
+      <property name="spacing">
+       <number>2</number>
       </property>
-      <property name="toolTip">
-       <string>Configure Lightscreen</string>
-      </property>
-      <property name="text">
-       <string>&amp;Options</string>
-      </property>
-      <property name="shortcut">
-       <string>Ctrl+O</string>
-      </property>
-      <property name="autoDefault">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="1">
-     <widget class="QPushButton" name="folderPushButton">
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>26</height>
-       </size>
-      </property>
-      <property name="toolTip">
-       <string>Open the current Screenshot folder</string>
-      </property>
-      <property name="text">
-       <string>&amp;Folder</string>
-      </property>
-      <property name="shortcut">
-       <string>Ctrl+F</string>
-      </property>
-      <property name="autoDefault">
-       <bool>false</bool>
-      </property>
-     </widget>
+      <item>
+       <widget class="QPushButton" name="optionsPushButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>Configure Lightscreen</string>
+        </property>
+        <property name="text">
+         <string>&amp;Options</string>
+        </property>
+        <property name="shortcut">
+         <string>Ctrl+O</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="folderPushButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>Open the current Screenshot folder</string>
+        </property>
+        <property name="text">
+         <string>&amp;Folder</string>
+        </property>
+        <property name="shortcut">
+         <string>Ctrl+F</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
     <item row="0" column="0">
      <widget class="QPushButton" name="screenPushButton">
