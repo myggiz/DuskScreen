@@ -1,3 +1,13 @@
 *.2-pre1
 *.autosave
-*.pro.*
+*.pro.*release/
+debug/
+Makefile*
+.qmake.stash
+object_script.*
+build_errors.log
+*.o
+ui_*.h
+moc_*.cpp
+qrc_*.cpp
+lightscreen_resource.rc

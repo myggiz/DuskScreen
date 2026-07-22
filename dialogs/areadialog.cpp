@@ -86,7 +86,7 @@ AreaDialog::AreaDialog(Screenshot *screenshot) :
     auto awLayout = new QHBoxLayout(this);
     awLayout->addWidget(awAcceptButton);
     awLayout->addWidget(awRejectButton);
-    awLayout->setMargin(0);
+    awLayout->setContentsMargins(0, 0, 0, 0);
     awLayout->setSpacing(0);
 
     mAcceptWidget->setLayout(awLayout);
@@ -440,7 +440,7 @@ void AreaDialog::mousePressEvent(QMouseEvent *e)
             setCursor(Qt::ClosedHandCursor);
         }
     } else if (e->button() == Qt::RightButton
-               || e->button() == Qt::MidButton) {
+               || e->button() == Qt::MiddleButton) {
         cancel();
     }
 
@@ -596,7 +596,10 @@ void AreaDialog::paintEvent(QPaintEvent *e)
             painter.setPen(handleColor);
             handleColor.setAlpha(80);
             painter.setBrush(handleColor);
-            painter.drawRects(handleMask().rects());
+            const QRegion handleRegion = handleMask();
+            for (const QRect &handleRect : handleRegion) {
+                painter.drawRect(handleRect);
+            }
         }
     }
 

@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+#include <QActionGroup>
 #include <QDate>
 #include <QDesktopServices>
 #include <QFileInfo>
@@ -31,7 +32,7 @@
 #include <QTimer>
 #include <QToolTip>
 #include <QUrl>
-#include <QSound>
+#include <QSoundEffect>
 #include <QKeyEvent>
 
 #ifdef Q_OS_WIN
@@ -50,6 +51,20 @@
 #include <tools/UGlobalHotkey/uglobalhotkeys.h>
 
 #include <updater/updater.h>
+
+// Qt 6 removed QSound; QSoundEffect is the WAV-playback replacement. Fire-and-forget:
+// the effect deletes itself once playback finishes.
+static void playSoundFile(const QString &fileName)
+{
+    auto *effect = new QSoundEffect;
+    effect->setSource(QUrl::fromLocalFile(fileName));
+    QObject::connect(effect, &QSoundEffect::playingChanged, effect, [effect] {
+        if (!effect->isPlaying()) {
+            effect->deleteLater();
+        }
+    });
+    effect->play();
+}
 
 LightscreenWindow::LightscreenWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -171,15 +186,10 @@ void LightscreenWindow::cleanup(const Screenshot::Options &options)
 
     if (settings()->value("options/playSound", false).toBool()) {
         if (options.result == Screenshot::Success) {
-            QSound::play("sounds/ls.screenshot.wav");
+            playSoundFile("sounds/ls.screenshot.wav");
         } else {
-#ifdef Q_OS_WIN
-            QSound::play("afakepathtomakewindowsplaythedefaultsoundtheresprobablyabetterwaybuticantbebothered");
-#else
-            QSound::play("sound/ls.error.wav");
-#endif
+            playSoundFile("sound/ls.error.wav");
         }
-
     }
 
     updateStatus();

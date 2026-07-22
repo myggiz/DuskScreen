@@ -20,7 +20,7 @@
 #include <QCompleter>
 #include <QDate>
 #include <QDesktopServices>
-#include <QDirModel>
+#include <QFileSystemModel>
 #include <QFileDialog>
 #include <QKeyEvent>
 #include <QMessageBox>
@@ -28,6 +28,7 @@
 #include <QRegularExpression>
 #include <QScreen>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QTimer>
 #include <QUrl>
 #include <QInputDialog>
@@ -69,7 +70,7 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
         ui.clipboardGroupBox->setFlat(false);
 
         ui.optionsTab->layout()->setContentsMargins(0, 0, 6, 0);
-        ui.aboutTab->layout()->setMargin(8);
+        ui.aboutTab->layout()->setContentsMargins(8, 8, 8, 8);
     }
 #endif
 
@@ -402,7 +403,7 @@ bool OptionsDialog::event(QEvent *event)
 
 #ifdef Q_OS_WIN
 // Qt does not send the print screen key as a regular QKeyPress event, so we must use the Windows API
-bool OptionsDialog::nativeEvent(const QByteArray &eventType, void *message, long *result)
+bool OptionsDialog::nativeEvent(const QByteArray &eventType, void *message, qintptr *result)
 {
     if (eventType == "windows_generic_MSG") {
         MSG *m = static_cast<MSG *>(message);
@@ -520,7 +521,10 @@ void OptionsDialog::init()
 
     // Set up the autocomplete for the directory.
     QCompleter *completer = new QCompleter(this);
-    completer->setModel(new QDirModel(QStringList(), QDir::Dirs, QDir::Name, completer));
+    QFileSystemModel *dirModel = new QFileSystemModel(completer);
+    dirModel->setFilter(QDir::Dirs | QDir::Drives | QDir::NoDotAndDotDot);
+    dirModel->setRootPath(QString());
+    completer->setModel(dirModel);
     ui.targetLineEdit->setCompleter(completer);
 
     // HotkeyWidget icons.
