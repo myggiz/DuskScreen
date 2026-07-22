@@ -15,7 +15,7 @@ All server URLs derive from a single build define, `APP_URL`, in
 [`version.pri`](../version.pri):
 
 ```
-APP_URL = https://duskscreen.myggiz.net
+APP_URL = https://duskscreen.com
 ```
 
 Change it to your host and rebuild. Everything below is relative to that base.
@@ -37,7 +37,7 @@ This is the only endpoint the app actually calls. Behavior (`updater/updater.cpp
   GET {APP_URL}/version?from=<currentVersion>&platform=Windows_<osVersion>
   ```
 
-  e.g. `GET https://duskscreen.myggiz.net/version?from=2.5&platform=Windows_10`
+  e.g. `GET https://duskscreen.com/version?from=2.5&platform=Windows_10`
 
 - **Response: a plain-text version string and nothing else** — e.g. `2.6`.
   The app parses it with `QVersionNumber` and, if it is greater than the running

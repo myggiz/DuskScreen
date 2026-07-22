@@ -141,7 +141,7 @@
              <string notr="true">margin-left: 4px</string>
             </property>
             <property name="text">
-             <string notr="true"> &lt;a href=&quot;https://duskscreen.myggiz.net/help#date&quot;&gt;[?]&lt;/a&gt;</string>
+             <string notr="true"> &lt;a href=&quot;https://duskscreen.com/help#date&quot;&gt;[?]&lt;/a&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>

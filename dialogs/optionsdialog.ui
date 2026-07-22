@@ -1025,7 +1025,7 @@ A fork of Lightscreen by &lt;a href=&quot;https://ckaiser.com.ar&quot;&gt;Christ
        <item>
         <widget class="QLabel" name="linksLabel">
          <property name="text">
-          <string>&lt;a href=&quot;https://github.com/Myggiz/DuskScreen/&quot;&gt;GitHub page&lt;/a&gt;&lt;br&gt;&lt;br&gt;&lt;a href=&quot;https://duskscreen.myggiz.net/&quot;&gt;DuskScreen home page&lt;/a&gt;</string>
+          <string>&lt;a href=&quot;https://github.com/Myggiz/DuskScreen/&quot;&gt;GitHub page&lt;/a&gt;&lt;br&gt;&lt;br&gt;&lt;a href=&quot;https://duskscreen.com/&quot;&gt;DuskScreen home page&lt;/a&gt;</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
