@@ -75,45 +75,36 @@ public:
         NamingOptions namingOptions;
         QDir directory;
         QString prefix;
-        QString uploadService;
 
         int mode;
         int quality;
 
         bool animations;
         bool clipboard;
-        bool urlClipboard;
         bool currentMonitor;
         bool cursor;
         bool file;
         bool magnify;
         bool optimize;
-        bool preview;
         bool replace;
         bool saveAs;
-        bool upload;
     };
 
     Screenshot(QObject *parent, Screenshot::Options options);
-    ~Screenshot();
 
     const Screenshot::Options &options();
     QPixmap &pixmap();
     static QString getName(const NamingOptions &options, const QString &prefix, const QDir &directory);
-    const QString &unloadedFileName();
 
 public slots:
     void confirm(bool result = true);
     void confirmation();
     void discard();
-    void markUpload();
     void optimize();
     void optimizationDone();
     void save();
     void setPixmap(const QPixmap &pixmap);
     void take();
-    void upload();
-    void uploadDone(const QString &url);
     void refresh();
 
 signals:
@@ -128,15 +119,12 @@ private:
     const QString newFileName() const;
     void selectedArea();
     void selectedWindow();
-    bool unloadPixmap();
     void wholeScreen();
 
 private:
     Screenshot::Options mOptions;
     QPixmap mPixmap;
     bool mPixmapDelay;
-    bool mUnloaded;
-    QString mUnloadFilename;
 
 };
 

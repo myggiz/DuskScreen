@@ -24,6 +24,7 @@
 #include <QDateTime>
 #include <QDesktopServices>
 #include <QKeyEvent>
+#include <QRegularExpression>
 #include <QSettings>
 #include <QUrl>
 
@@ -73,7 +74,7 @@ bool NamingDialog::eventFilter(QObject *object, QEvent *event)
             && object == ui.dateFormatComboBox) {
         QKeyEvent *keyEvent = (QKeyEvent *)(event);
 #ifdef Q_OS_WIN
-        if (QRegExp("[?:\\\\/*\"<>|]").exactMatch(keyEvent->text())) {
+        if (keyEvent->text().contains(QRegularExpression("[?:\\\\/*\"<>|]"))) {
             event->ignore();
             return true;
         }

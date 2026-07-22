@@ -24,6 +24,7 @@
 #include <QPainter>
 #include <QPixmap>
 #include <QProcess>
+#include <QStandardPaths>
 #include <QTextStream>
 #include <QScreen>
 #include <QStringBuilder>
@@ -31,7 +32,6 @@
 #include <tools/screenshot.h>
 #include <tools/screenshotmanager.h>
 #include <tools/windowpicker.h>
-#include <tools/uploader/uploader.h>
 #include <dialogs/areadialog.h>
 
 #include <tools/os.h>
@@ -50,19 +50,10 @@
 Screenshot::Screenshot(QObject *parent, Screenshot::Options options):
     QObject(parent),
     mOptions(options),
-    mPixmapDelay(false),
-    mUnloaded(false),
-    mUnloadFilename()
+    mPixmapDelay(false)
 {
     if (mOptions.format == Screenshot::PNG) {
         mOptions.quality = 80;
-    }
-}
-
-Screenshot::~Screenshot()
-{
-    if (!mUnloadFilename.isEmpty()) {
-        QFile::remove(mUnloadFilename);
     }
 }
 
@@ -96,7 +87,7 @@ QString Screenshot::getName(const NamingOptions &options, const QString &prefix,
             QString format;
             QTextStream(&format) << "%0" << (options.leadingZeros + 1) << "d";
 
-            naming = naming.arg(QString().sprintf(format.toLatin1(), naming_largest + 1));
+            naming = naming.arg(QString::asprintf(format.toLatin1(), naming_largest + 1));
         } else {
             naming = naming.arg(naming_largest + 1);
         }
@@ -105,7 +96,7 @@ QString Screenshot::getName(const NamingOptions &options, const QString &prefix,
         naming = naming.arg(QLocale().toString(QDateTime::currentDateTime(), options.dateFormat));
         break;
     case  Screenshot::Timestamp: // Timestamp
-        naming = naming.arg(QDateTime::currentDateTime().toTime_t());
+        naming = naming.arg(QDateTime::currentDateTime().toSecsSinceEpoch());
         break;
     case  Screenshot::Empty:
         naming = naming.arg("");
@@ -113,11 +104,6 @@ QString Screenshot::getName(const NamingOptions &options, const QString &prefix,
     }
 
     return naming;
-}
-
-const QString &Screenshot::unloadedFileName()
-{
-    return mUnloadFilename;
 }
 
 const Screenshot::Options &Screenshot::options()
@@ -149,20 +135,11 @@ void Screenshot::confirm(bool result)
 void Screenshot::confirmation()
 {
     emit askConfirmation();
-
-    if (mOptions.file) {
-        unloadPixmap();
-    }
 }
 
 void Screenshot::discard()
 {
     confirm(false);
-}
-
-void Screenshot::markUpload()
-{
-    mOptions.upload = true;
 }
 
 void Screenshot::optimize()
@@ -176,13 +153,15 @@ void Screenshot::optimize()
     QString optiPNG;
 
 #ifdef Q_OS_UNIX
-    optiPNG = "optipng";
+    optiPNG = QStandardPaths::findExecutable("optipng");
 #else
     optiPNG = qApp->applicationDirPath() % QDir::separator() % "optipng.exe";
 #endif
 
-    if (!QFile::exists(optiPNG)) {
+    if (optiPNG.isEmpty() || !QFile::exists(optiPNG)) {
         emit optimizationDone();
+        process->deleteLater();
+        return;
     }
 
     process->start(optiPNG, QStringList() << mOptions.fileName);
@@ -195,11 +174,7 @@ void Screenshot::optimize()
 
 void Screenshot::optimizationDone()
 {
-    if (mOptions.upload) {
-        upload();
-    } else {
-        emit finished();
-    }
+    emit finished();
 }
 
 void Screenshot::save()
@@ -239,12 +214,7 @@ void Screenshot::save()
         name = name % " (" % QString::number(count + 1) % ")";
     }
 
-    if (mOptions.clipboard && !(mOptions.upload && mOptions.urlClipboard)) {
-        if (mUnloaded) {
-            mUnloaded = false;
-            mPixmap = QPixmap(mUnloadFilename);
-        }
-
+    if (mOptions.clipboard) {
         QApplication::clipboard()->setPixmap(mPixmap, QClipboard::Clipboard);
 
         if (!mOptions.file) {
@@ -257,8 +227,6 @@ void Screenshot::save()
 
         if (name.isEmpty()) {
             result = Screenshot::Cancel;
-        } else if (mUnloaded) {
-            result = (QFile::rename(mUnloadFilename, fileName)) ? Screenshot::Success : Screenshot::Failure;
         } else if (mPixmap.save(fileName, 0, mOptions.quality)) {
             result = Screenshot::Success;
         } else {
@@ -274,16 +242,7 @@ void Screenshot::save()
     }
 
     if (mOptions.format == Screenshot::PNG && mOptions.optimize && mOptions.file) {
-        if (!mOptions.upload) {
-            ScreenshotManager::instance()->saveHistory(mOptions.fileName);
-        }
-
         optimize();
-    } else if (mOptions.upload) {
-        upload();
-    } else if (mOptions.file) {
-        ScreenshotManager::instance()->saveHistory(mOptions.fileName);
-        emit finished();
     } else {
         emit finished();
     }
@@ -329,26 +288,6 @@ void Screenshot::take()
     } else {
         confirmation();
     }
-}
-
-void Screenshot::upload()
-{
-    if (mOptions.file) {
-        Uploader::instance()->upload(mOptions.fileName, mOptions.uploadService);
-    } else if (unloadPixmap()) {
-        Uploader::instance()->upload(mUnloadFilename, mOptions.uploadService);
-    } else {
-        emit finished();
-    }
-}
-
-void Screenshot::uploadDone(const QString &url)
-{
-    if (mOptions.urlClipboard && !url.isEmpty()) {
-        QApplication::clipboard()->setText(url, QClipboard::Clipboard);
-    }
-
-    emit finished();
 }
 
 void Screenshot::refresh()
@@ -401,6 +340,8 @@ const QString Screenshot::extension() const
         return QStringLiteral(".jpg");
         break;
     }
+
+    return QStringLiteral(".png");
 }
 
 void Screenshot::grabDesktop()
@@ -500,23 +441,6 @@ void Screenshot::selectedWindow()
     mPixmapDelay = true;
 
     connect(windowPicker, SIGNAL(pixmap(QPixmap)), this, SLOT(setPixmap(QPixmap)));
-}
-
-bool Screenshot::unloadPixmap()
-{
-    if (mUnloaded) {
-        return true;
-    }
-
-    // Unloading the pixmap to reduce memory usage during previews
-    mUnloadFilename = QString("%1/.screenshot.%2%3").arg(mOptions.directory.path()).arg(qrand() * qrand() + QDateTime::currentDateTime().toTime_t()).arg(extension());
-    mUnloaded       = mPixmap.save(mUnloadFilename, 0, mOptions.quality);
-
-    if (mUnloaded) {
-        mPixmap = QPixmap();
-    }
-
-    return mUnloaded;
 }
 
 void Screenshot::wholeScreen()

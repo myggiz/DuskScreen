@@ -3,10 +3,8 @@ TARGET = lightscreen
 DEFINES += QT_DEPRECATED_WARNINGS
 
 HEADERS += dialogs/areadialog.h \
-    dialogs/historydialog.h \
     dialogs/namingdialog.h \
     dialogs/optionsdialog.h \
-    dialogs/previewdialog.h \
     dialogs/updaterdialog.h \
     lightscreenwindow.h \
     tools/os.h \
@@ -14,19 +12,11 @@ HEADERS += dialogs/areadialog.h \
     tools/screenshotmanager.h \
     tools/windowpicker.h \
     updater/updater.h \
-    widgets/hotkeywidget.h \
-    tools/uploader/imageuploader.h \
-    tools/uploader/imguruploader.h \
-    tools/uploader/pomfuploader.h \
-    tools/uploader/uploader.h \
-    widgets/imguroptionswidget.h \
-    widgets/pomfoptionswidget.h
+    widgets/hotkeywidget.h
 
 SOURCES += dialogs/areadialog.cpp \
-    dialogs/historydialog.cpp \
     dialogs/namingdialog.cpp \
     dialogs/optionsdialog.cpp \
-    dialogs/previewdialog.cpp \
     dialogs/updaterdialog.cpp \
     lightscreenwindow.cpp \
     main.cpp \
@@ -35,27 +25,18 @@ SOURCES += dialogs/areadialog.cpp \
     tools/screenshotmanager.cpp \
     tools/windowpicker.cpp \
     updater/updater.cpp \
-    widgets/hotkeywidget.cpp \
-    tools/uploader/imageuploader.cpp \
-    tools/uploader/imguruploader.cpp \
-    tools/uploader/pomfuploader.cpp \
-    tools/uploader/uploader.cpp \
-    widgets/imguroptionswidget.cpp \
-    widgets/pomfoptionswidget.cpp
+    widgets/hotkeywidget.cpp
 
-FORMS += dialogs/historydialog.ui \
-    dialogs/namingdialog.ui \
+FORMS += dialogs/namingdialog.ui \
     dialogs/optionsdialog.ui \
-    lightscreenwindow.ui \
-    widgets/pomfoptionswidget.ui \
-    widgets/imguroptionswidget.ui
+    lightscreenwindow.ui
 
 RESOURCES += lightscreen.qrc
 CODECFORSRC = UTF-8
 INCLUDEPATH += $$PWD
 CONFIG += c++14
 
-QT += core gui widgets network sql multimedia concurrent
+QT += core gui widgets network multimedia
 
 include($$PWD/tools/SingleApplication/singleapplication.pri)
 include($$PWD/tools/UGlobalHotkey/uglobalhotkey.pri)

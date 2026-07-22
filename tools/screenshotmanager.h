@@ -40,13 +40,8 @@ public:
     ScreenshotManager(QObject *parent = 0);
     static ScreenshotManager *instance();
 
-    void initHistory();
     int activeCount() const;
     bool portableMode();
-    void saveHistory(const QString &fileName, const QString &url = "", const QString &deleteHash = "");
-    void updateHistory(const QString &fileName, const QString &url, const QString &deleteHash);
-    void removeHistory(const QString &fileName, qint64 time);
-    void clearHistory();
     QSettings *settings() const { return mSettings; }
 
 public slots:
@@ -54,7 +49,6 @@ public slots:
     void cleanup();
     void finished();
     void take(Screenshot::Options &options);
-    void uploadDone(const QString &fileName, const QString &url, const QString &deleteHash);
 
 signals:
     void confirm(Screenshot *screenshot);
@@ -65,9 +59,7 @@ private:
     static ScreenshotManager *mInstance;
     QList<Screenshot*> mScreenshots;
     QSettings *mSettings;
-    QString mHistoryPath;
     bool mPortableMode;
-    bool mHistoryInitialized;
 };
 
 #endif // SCREENSHOTMANAGER_H

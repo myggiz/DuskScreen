@@ -44,14 +44,11 @@
 //
 #include <lightscreenwindow.h>
 #include <dialogs/optionsdialog.h>
-#include <dialogs/previewdialog.h>
-#include <dialogs/historydialog.h>
 
 #include <tools/os.h>
 #include <tools/screenshot.h>
 #include <tools/screenshotmanager.h>
 #include <tools/UGlobalHotkey/uglobalhotkeys.h>
-#include <tools/uploader/uploader.h>
 
 #include <updater/updater.h>
 
@@ -74,9 +71,6 @@ LightscreenWindow::LightscreenWindow(QWidget *parent) :
 
     ui.optionsPushButton->setIcon(os::icon("configure"));
     ui.folderPushButton->setIcon(os::icon("folder"));
-    ui.imgurPushButton->setIcon(os::icon("imgur"));
-
-    createUploadMenu();
 
 #ifdef Q_OS_WIN
     if (QSysInfo::WindowsVersion >= QSysInfo::WV_WINDOWS7) {
@@ -112,11 +106,6 @@ LightscreenWindow::LightscreenWindow(QWidget *parent) :
     connect(mGlobalHotkeys, &UGlobalHotkeys::activated, [&](size_t id) {
         action(id);
     });
-
-    // Uploader
-    connect(Uploader::instance(), &Uploader::progressChanged, this, &LightscreenWindow::uploadProgress);
-    connect(Uploader::instance(), &Uploader::done           , this, &LightscreenWindow::showUploaderMessage);
-    connect(Uploader::instance(), &Uploader::error          , this, &LightscreenWindow::showUploaderError);
 
     // Manager
     connect(ScreenshotManager::instance(), &ScreenshotManager::confirm,           this, &LightscreenWindow::preview);
@@ -183,13 +172,7 @@ void LightscreenWindow::cleanup(const Screenshot::Options &options)
         }
 #endif
 
-        if (mPreviewDialog) {
-            if (mPreviewDialog->count() <= 1 && mWasVisible) {
-                show();
-            }
-
-            mPreviewDialog->show();
-        } else if (mWasVisible) {
+        if (mWasVisible) {
             show();
         }
 
@@ -199,8 +182,7 @@ void LightscreenWindow::cleanup(const Screenshot::Options &options)
     if (settings()->value("options/tray").toBool() && mTrayIcon) {
         notify(options.result);
 
-        if (settings()->value("options/message").toBool() && options.file && !options.upload) {
-            // This message wll get shown only when messages are enabled and the file won't get another upload pop-up soon.
+        if (settings()->value("options/message").toBool() && options.file) {
             showScreenshotMessage(options.result, options.fileName);
         }
     }
@@ -275,36 +257,6 @@ bool LightscreenWindow::closingWithoutTray()
     return false; // Cancel.
 }
 
-void LightscreenWindow::createUploadMenu()
-{
-    auto imgurMenu = new QMenu(tr("Upload"));
-
-    auto uploadAction = new QAction(os::icon("imgur"), tr("&Upload last"), imgurMenu);
-    uploadAction->setToolTip(tr("Upload the last screenshot you took to imgur.com"));
-    connect(uploadAction, &QAction::triggered, this, &LightscreenWindow::uploadLast);
-
-    auto cancelAction = new QAction(os::icon("no"), tr("&Cancel upload"), imgurMenu);
-    cancelAction->setToolTip(tr("Cancel the currently uploading screenshots"));
-    cancelAction->setEnabled(false);
-
-    connect(this, &LightscreenWindow::uploading, cancelAction, &QAction::setEnabled);
-    connect(cancelAction, &QAction::triggered, this, &LightscreenWindow::uploadCancel);
-
-    auto historyAction = new QAction(os::icon("view-history"), tr("View &History"), imgurMenu);
-    connect(historyAction, &QAction::triggered, this, &LightscreenWindow::showHistoryDialog);
-
-    imgurMenu->addAction(uploadAction);
-    imgurMenu->addAction(cancelAction);
-    imgurMenu->addAction(historyAction);
-    imgurMenu->addSeparator();
-
-    connect(imgurMenu, &QMenu::aboutToShow, this, [&, imgurMenu] {
-        imgurMenu->actions().at(0)->setEnabled(!mLastScreenshot.isEmpty());
-    });
-
-    ui.imgurPushButton->setMenu(imgurMenu);
-}
-
 void LightscreenWindow::goToFolder()
 {
 #ifdef Q_OS_WIN
@@ -331,8 +283,6 @@ void LightscreenWindow::messageClicked()
         goToFolder();
     } else if (mLastMessage == 3) {
         QTimer::singleShot(0, this, &LightscreenWindow::showOptions);
-    } else {
-        QDesktopServices::openUrl(QUrl(Uploader::instance()->lastUrl()));
     }
 }
 
@@ -352,10 +302,6 @@ void LightscreenWindow::executeArgument(const QString &message)
         screenshotAction(Screenshot::SelectedWindow);
     } else if (message == "--folder") {
         action(OpenScreenshotFolder);
-    } else if (message == "--uploadlast") {
-        uploadLast();
-    } else if (message == "--viewhistory") {
-        showHistoryDialog();
     } else if (message == "--options") {
         showOptions();
     } else if (message == "--quit") {
@@ -407,15 +353,7 @@ void LightscreenWindow::notify(const Screenshot::Result &result)
 
 void LightscreenWindow::preview(Screenshot *screenshot)
 {
-    if (screenshot->options().preview) {
-        if (!mPreviewDialog) {
-            mPreviewDialog = new PreviewDialog(this);
-        }
-
-        mPreviewDialog->add(screenshot);
-    } else {
-        screenshot->confirm(true);
-    }
+    screenshot->confirm(true);
 }
 
 void LightscreenWindow::quit()
@@ -427,14 +365,6 @@ void LightscreenWindow::quit()
 
     if (ScreenshotManager::instance()->activeCount() > 0) {
         doing = tr("processing");
-    }
-
-    if (Uploader::instance()->uploading() > 0) {
-        if (doing.isEmpty()) {
-            doing = tr("uploading");
-        } else {
-            doing = tr("processing and uploading");
-        }
     }
 
     if (!doing.isEmpty()) {
@@ -494,12 +424,6 @@ void LightscreenWindow::screenshotAction(Screenshot::Mode mode)
 
     delayms += 400;
 
-    if (optionsHide && mPreviewDialog) {
-        if (mPreviewDialog->count() >= 1) {
-            mPreviewDialog->hide();
-        }
-    }
-
     // The delayed functions works using the static variable lastMode
     // which keeps the argument so a QTimer can call this function again.
     if (delayms > 0) {
@@ -532,17 +456,12 @@ void LightscreenWindow::screenshotAction(Screenshot::Mode mode)
         options.quality        = settings()->value("options/quality", 100).toInt();
         options.currentMonitor = settings()->value("options/currentMonitor", false).toBool();
         options.clipboard      = settings()->value("options/clipboard",      true).toBool();
-        options.urlClipboard   = settings()->value("options/urlClipboard",   false).toBool();
-        options.preview        = settings()->value("options/preview",        false).toBool();
         options.magnify        = settings()->value("options/magnify",        false).toBool();
         options.cursor         = settings()->value("options/cursor",         true).toBool();
         options.saveAs         = settings()->value("options/saveAs",         false).toBool();
         options.animations     = settings()->value("options/animations",     true)  .toBool();
         options.replace        = settings()->value("options/replace",        false).toBool();
-        options.upload         = settings()->value("options/uploadAuto",     false).toBool();
         options.optimize       = settings()->value("options/optimize",       false).toBool();
-
-        options.uploadService  = Uploader::serviceName(settings()->value("upload/service", 0).toInt());
 
         Screenshot::NamingOptions namingOptions;
         namingOptions.naming       = (Screenshot::Naming) settings()->value("file/naming").toInt();
@@ -618,14 +537,6 @@ void LightscreenWindow::showHotkeyError(const QStringList &hotkeys)
     }
 }
 
-void LightscreenWindow::showHistoryDialog()
-{
-    HistoryDialog historyDialog(this);
-    historyDialog.exec();
-
-    updateStatus();
-}
-
 void LightscreenWindow::showOptions()
 {
     mGlobalHotkeys->unregisterAllHotkeys();
@@ -664,34 +575,6 @@ void LightscreenWindow::showScreenshotMessage(const Screenshot::Result &result, 
     mTrayIcon->showMessage(title, message);
 }
 
-void LightscreenWindow::showUploaderError(const QString &error)
-{
-    mLastMessage = -1;
-    updateStatus();
-
-    if (mTrayIcon && !error.isEmpty() && settings()->value("options/message").toBool()) {
-        mTrayIcon->showMessage(tr("Upload error"), error);
-    }
-
-    notify(Screenshot::Failure);
-}
-
-void LightscreenWindow::showUploaderMessage(const QString &fileName, const QString &url)
-{
-    if (mTrayIcon && settings()->value("options/message").toBool() && !url.isEmpty()) {
-        QString screenshot = QFileInfo(fileName).fileName();
-
-        if (screenshot.startsWith(".lstemp.")) {
-            screenshot = tr("Screenshot");
-        }
-
-        mLastMessage = 2;
-        mTrayIcon->showMessage(tr("%1 uploaded").arg(screenshot), tr("Click here to go to %1").arg(url));
-    }
-
-    updateStatus();
-}
-
 void LightscreenWindow::toggleVisibility()
 {
     if (isVisible()) {
@@ -704,7 +587,6 @@ void LightscreenWindow::toggleVisibility()
 
 void LightscreenWindow::updateStatus()
 {
-    int uploadCount = Uploader::instance()->uploading();
     int activeCount = ScreenshotManager::instance()->activeCount();
 
     if (mHasTaskbarButton) {
@@ -712,29 +594,16 @@ void LightscreenWindow::updateStatus()
         mTaskbarButton->progress()->setVisible(true);
     }
 
-    if (uploadCount > 0) {
-        setStatus(tr("%1 uploading").arg(uploadCount));
+    if (activeCount > 1) {
+        setStatus(tr("%1 processing").arg(activeCount));
+    } else if (activeCount == 1) {
+        setStatus(tr("processing"));
+    } else {
+        setStatus();
 
         if (mHasTaskbarButton) {
-            mTaskbarButton->progress()->setRange(0, 100);
-            mTaskbarButton->progress()->resume();
+            mTaskbarButton->progress()->setVisible(false);
         }
-
-        emit uploading(true);
-    } else {
-        if (activeCount > 1) {
-            setStatus(tr("%1 processing").arg(activeCount));
-        } else if (activeCount == 1) {
-            setStatus(tr("processing"));
-        } else {
-            setStatus();
-
-            if (mHasTaskbarButton) {
-                mTaskbarButton->progress()->setVisible(false);
-            }
-        }
-
-        emit uploading(false);
     }
 }
 
@@ -765,49 +634,6 @@ void LightscreenWindow::updaterDone(bool result)
         QDesktopServices::openUrl(QUrl("https://lightscreen.com.ar/whatsnew?from=" + qApp->applicationVersion()));
     } else if (msgBox.clickedButton() == turnOffButton) {
         settings()->setValue("options/disableUpdater", true);
-    }
-}
-
-void LightscreenWindow::upload(const QString &fileName)
-{
-    Uploader::instance()->upload(fileName, Uploader::serviceName(settings()->value("upload/service", 0).toInt()));
-}
-
-void LightscreenWindow::uploadCancel()
-{
-    if (Uploader::instance()->uploading() <= 0) {
-        return;
-    }
-
-    int confirm = QMessageBox::question(this, tr("Upload cancel"), tr("Do you want to cancel all screenshot uploads?"), tr("Cancel"), tr("Don't Cancel"));
-
-    if (confirm == 0) {
-        Uploader::instance()->cancel();
-        updateStatus();
-    }
-}
-
-void LightscreenWindow::uploadLast()
-{
-    upload(mLastScreenshot);
-    updateStatus();
-}
-
-void LightscreenWindow::uploadProgress(int progress)
-{
-    if (mHasTaskbarButton) {
-        mTaskbarButton->progress()->setVisible(true);
-        mTaskbarButton->progress()->setValue(progress);
-    }
-
-    if (isVisible() && progress > 0) {
-        int uploadCount = Uploader::instance()->uploading();
-
-        if (uploadCount > 1) {
-            setWindowTitle(tr("%1% of %2 uploads - Lightscreen").arg(progress).arg(uploadCount));
-        } else {
-            setWindowTitle(tr("%1% - Lightscreen").arg(progress));
-        }
     }
 }
 
@@ -898,21 +724,6 @@ void LightscreenWindow::createTrayIcon()
 
     connect(screenshotGroup, &QActionGroup::triggered, this, &LightscreenWindow::screenshotActionTriggered);
 
-    // Duplicated for the screenshot button :(
-    auto uploadAction = new QAction(os::icon("imgur"), tr("&Upload last"), mTrayIcon);
-    uploadAction->setToolTip(tr("Upload the last screenshot you took to imgur.com"));
-    connect(uploadAction, &QAction::triggered, this, &LightscreenWindow::uploadLast);
-
-    auto cancelAction = new QAction(os::icon("no"), tr("&Cancel upload"), mTrayIcon);
-    cancelAction->setToolTip(tr("Cancel the currently uploading screenshots"));
-    cancelAction->setEnabled(false);
-    connect(this, &LightscreenWindow::uploading, cancelAction, &QAction::setEnabled);
-    connect(cancelAction, &QAction::triggered, this, &LightscreenWindow::uploadCancel);
-
-    auto historyAction = new QAction(os::icon("view-history"), tr("View History"), mTrayIcon);
-    connect(historyAction, &QAction::triggered, this, &LightscreenWindow::showHistoryDialog);
-    //
-
     auto optionsAction = new QAction(os::icon("configure"), tr("View &Options"), mTrayIcon);
     connect(optionsAction, &QAction::triggered, this, &LightscreenWindow::showOptions);
 
@@ -928,17 +739,8 @@ void LightscreenWindow::createTrayIcon()
     screenshotMenu->addAction(windowAction);
     screenshotMenu->addAction(windowPickerAction);
 
-    // Duplicated for the screenshot button :(
-    auto imgurMenu = new QMenu(tr("Upload"));
-    imgurMenu->addAction(uploadAction);
-    imgurMenu->addAction(cancelAction);
-    imgurMenu->addAction(historyAction);
-    imgurMenu->addSeparator();
-
     auto trayIconMenu = new QMenu;
     trayIconMenu->addAction(hideAction);
-    trayIconMenu->addSeparator();
-    trayIconMenu->addMenu(imgurMenu);
     trayIconMenu->addSeparator();
     trayIconMenu->addMenu(screenshotMenu);
     trayIconMenu->addAction(optionsAction);

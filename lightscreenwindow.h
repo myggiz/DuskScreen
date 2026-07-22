@@ -26,8 +26,6 @@
 #include <updater/updater.h>
 #include <tools/screenshot.h>
 
-#include <dialogs/previewdialog.h>
-
 #include "ui_lightscreenwindow.h"
 
 class Updater;
@@ -56,7 +54,6 @@ public slots:
     void cleanup(const Screenshot::Options &options);
     void closeToTrayWarning();
     bool closingWithoutTray();
-    void createUploadMenu();
     void goToFolder();
     void messageClicked();
     void executeArgument(const QString &message);
@@ -70,18 +67,11 @@ public slots:
     void screenshotActionTriggered(QAction *action);
     void screenHotkey();
     void showHotkeyError(const QStringList &hotkeys);
-    void showHistoryDialog();
     void showOptions();
     void showScreenshotMessage(const Screenshot::Result &result, const QString &fileName);
-    void showUploaderError(const QString &error);
-    void showUploaderMessage(const QString &fileName, const QString &url);
     void toggleVisibility();
     void updateStatus();
     void updaterDone(bool result);
-    void upload(const QString &fileName);
-    void uploadCancel();
-    void uploadLast();
-    void uploadProgress(int progress);
     void windowHotkey();
     void windowPickerHotkey();
 
@@ -89,7 +79,6 @@ private slots:
     void applySettings();
 
 signals:
-    void uploading(bool uploading);
     void finished();
 
 private:
@@ -114,7 +103,6 @@ private:
     Screenshot::Mode  mLastMode;
     QString mLastScreenshot;
     QPointer<QSystemTrayIcon> mTrayIcon;
-    QPointer<PreviewDialog> mPreviewDialog;
     QPointer<Updater> mUpdater;
     Ui::LightscreenWindowClass ui;
 

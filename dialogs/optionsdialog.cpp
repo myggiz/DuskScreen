@@ -26,6 +26,7 @@
 #include <QKeyEvent>
 #include <QMessageBox>
 #include <QProcess>
+#include <QRegularExpression>
 #include <QSettings>
 #include <QTimer>
 #include <QUrl>
@@ -33,21 +34,16 @@
 #include <QMenu>
 #include <QAction>
 
-#include <QFutureWatcher>
-#include <QtConcurrent>
-
 #ifdef Q_OS_WIN
     #include <windows.h>
 #endif
 
 #include <dialogs/optionsdialog.h>
 #include <dialogs/namingdialog.h>
-#include <dialogs/historydialog.h>
 
 #include <tools/os.h>
 #include <tools/screenshot.h>
 #include <tools/screenshotmanager.h>
-#include <tools/uploader/uploader.h>
 
 #include <updater/updater.h>
 
@@ -69,9 +65,7 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
         ui.controlGroupBox->setFlat(false);
         ui.interfaceGroupBox->setFlat(false);
         ui.screenshotsGroupBox->setFlat(false);
-        ui.previewGroupBox->setFlat(false);
         ui.updaterGroupBox->setFlat(false);
-        ui.historyGroupBox->setFlat(false);
         ui.clipboardGroupBox->setFlat(false);
 
         ui.optionsTab->layout()->setContentsMargins(0, 0, 6, 0);
@@ -91,7 +85,7 @@ void OptionsDialog::accepted()
         return;
     }
 
-    if (ui.prefixLineEdit->text().contains(QRegExp("[?:\\\\/*\"<>|]"))) {
+    if (ui.prefixLineEdit->text().contains(QRegularExpression("[?:\\\\/*\"<>|]"))) {
         QMessageBox::critical(this, tr("Filename character error"), tr("The filename can't contain any of the following characters: ? : \\ / * \" < > |"));
         return;
     }
@@ -166,7 +160,6 @@ void OptionsDialog::loadSettings()
 
     ui.startupCheckBox->toggle();
     ui.trayCheckBox->toggle();
-    ui.previewAutocloseCheckBox->toggle();
 
     QString targetDefault;
 
@@ -204,26 +197,14 @@ void OptionsDialog::loadSettings()
 #endif
 
     ui.saveAsCheckBox->setChecked(settings()->value("saveAs", false).toBool());
-    ui.previewGroupBox->setChecked(settings()->value("preview", false).toBool());
-    ui.previewSizeSpinBox->setValue(settings()->value("previewSize", 300).toInt());
-    ui.previewPositionComboBox->setCurrentIndex(settings()->value("previewPosition", 3).toInt());
-    ui.previewAutocloseCheckBox->setChecked(settings()->value("previewAutoclose", false).toBool());
-    ui.previewAutocloseTimeSpinBox->setValue(settings()->value("previewAutocloseTime", 15).toInt());
-    ui.previewAutocloseActionComboBox->setCurrentIndex(settings()->value("previewAutocloseAction", 0).toInt());
-    ui.previewDefaultActionComboBox->setCurrentIndex(settings()->value("previewDefaultAction", 0).toInt());
     ui.areaAutocloseCheckBox->setChecked(settings()->value("areaAutoclose", false).toBool());
-
-    // History mode is neat for normal operation but I'll keep it disabled by default on portable mode.
-    ui.historyCheckBox->setChecked(settings()->value("history", (ScreenshotManager::instance()->portableMode()) ? false : true).toBool());
 
     // Advanced
     ui.clipboardCheckBox->setChecked(settings()->value("clipboard", true).toBool());
-    ui.urlClipboardCheckBox->setChecked(settings()->value("urlClipboard", false).toBool());
     ui.optiPngCheckBox->setChecked(settings()->value("optimize", false).toBool());
     ui.closeHideCheckBox->setChecked(settings()->value("closeHide", true).toBool());
     ui.currentMonitorCheckBox->setChecked(settings()->value("currentMonitor", false).toBool());
     ui.replaceCheckBox->setChecked(settings()->value("replace", false).toBool());
-    ui.uploadCheckBox->setChecked(settings()->value("uploadAuto", false).toBool());
 
 #ifdef Q_OS_WIN
     if (!QFile::exists(qApp->applicationDirPath() + QDir::separator() + "optipng.exe")) {
@@ -287,30 +268,6 @@ void OptionsDialog::loadSettings()
     settings()->endGroup();
     settings()->endGroup();
 
-    settings()->beginGroup("upload");
-    ui.uploadServiceComboBox->setCurrentIndex(settings()->value("service").toInt());
-
-    settings()->beginGroup("imgur");
-    ui.imgurOptions->setUser(settings()->value("account_username", "").toString());
-    settings()->endGroup();
-
-    settings()->beginGroup("pomf");
-
-    // TODO: Move to pomfuploader in a more generic way.
-    QString pomf_url = settings()->value("pomf_url", "").toString();
-
-    if (!pomf_url.isEmpty()) {
-        if (ui.pomfOptions->ui.pomfUrlComboBox->findText(pomf_url, Qt::MatchFixedString) == -1) {
-            ui.pomfOptions->ui.pomfUrlComboBox->addItem(pomf_url);
-        }
-
-        ui.pomfOptions->ui.pomfUrlComboBox->setCurrentText(settings()->value("pomf_url", "").toString());
-        ui.pomfOptions->ui.verifyButton->setEnabled(!settings()->value("pomf_url", "").toString().isEmpty());
-    }
-
-    settings()->endGroup();
-    settings()->endGroup();
-
     QTimer::singleShot(0, this, &OptionsDialog::updatePreview);
 
     setEnabled(true);
@@ -350,26 +307,14 @@ void OptionsDialog::saveSettings()
     settings()->setValue("magnify", ui.magnifyCheckBox->isChecked());
     settings()->setValue("cursor", ui.cursorCheckBox->isChecked());
     settings()->setValue("saveAs", ui.saveAsCheckBox->isChecked());
-    settings()->setValue("preview", ui.previewGroupBox->isChecked());
-    settings()->setValue("previewSize", ui.previewSizeSpinBox->value());
-    settings()->setValue("previewPosition", ui.previewPositionComboBox->currentIndex());
-    settings()->setValue("previewAutoclose", ui.previewAutocloseCheckBox->isChecked());
-    settings()->setValue("previewAutocloseTime", ui.previewAutocloseTimeSpinBox->value());
-    settings()->setValue("previewAutocloseAction", ui.previewAutocloseActionComboBox->currentIndex());
-    settings()->setValue("previewDefaultAction", ui.previewDefaultActionComboBox->currentIndex());
     settings()->setValue("areaAutoclose", ui.areaAutocloseCheckBox->isChecked());
-    settings()->setValue("history", ui.historyCheckBox->isChecked());
 
     // Advanced
     settings()->setValue("closeHide", ui.closeHideCheckBox->isChecked());
     settings()->setValue("clipboard", ui.clipboardCheckBox->isChecked());
-    settings()->setValue("urlClipboard", ui.urlClipboardCheckBox->isChecked());
     settings()->setValue("optimize", ui.optiPngCheckBox->isChecked());
     settings()->setValue("currentMonitor", ui.currentMonitorCheckBox->isChecked());
     settings()->setValue("replace", ui.replaceCheckBox->isChecked());
-
-    //Upload
-    settings()->setValue("uploadAuto", ui.uploadCheckBox->isChecked());
     settings()->endGroup();
 
     settings()->beginGroup("actions");
@@ -404,20 +349,6 @@ void OptionsDialog::saveSettings()
     settings()->endGroup();
 
     settings()->endGroup();
-
-    settings()->beginGroup("upload");
-    settings()->setValue("service", ui.uploadServiceComboBox->currentIndex());
-
-    settings()->beginGroup("imgur");
-        settings()->setValue("anonymous", settings()->value("account_username").toString().isEmpty());
-        settings()->setValue("album"    , ui.imgurOptions->ui.albumComboBox->property("currentData").toString());
-    settings()->endGroup();
-
-    settings()->beginGroup("pomf");
-        settings()->setValue("pomf_url", ui.pomfOptions->ui.pomfUrlComboBox->currentText());
-    settings()->endGroup();
-
-    settings()->endGroup();
 }
 
 void OptionsDialog::updatePreview()
@@ -448,12 +379,6 @@ void OptionsDialog::updatePreview()
 
     ui.qualitySlider->setEnabled(ui.formatComboBox->currentText() != "PNG");
     ui.qualityLabel->setEnabled(ui.qualitySlider->isEnabled());
-}
-
-void OptionsDialog::viewHistory()
-{
-    HistoryDialog historyDialog(this);
-    historyDialog.exec();
 }
 
 //
@@ -613,17 +538,6 @@ void OptionsDialog::init()
     // Version
     ui.versionLabel->setText(tr("Version %1").arg(qApp->applicationVersion()));
 
-    ui.uploadSslWarningLabel->setVisible(false);
-
-    // Run the SSL check in another thread (slows down dialog startup considerably).
-    auto futureWatcher = new QFutureWatcher<bool>(this);
-    connect(futureWatcher, &QFutureWatcher<bool>::finished, futureWatcher, &QFutureWatcher<bool>::deleteLater);
-    connect(futureWatcher, &QFutureWatcher<bool>::finished, this, [&, futureWatcher] {
-        ui.uploadSslWarningLabel->setVisible(!futureWatcher->future().result());
-    });
-
-    futureWatcher->setFuture(QtConcurrent::run([]() -> bool { return QSslSocket::supportsSsl(); }));
-
     //
     // Connections
     //
@@ -638,7 +552,6 @@ void OptionsDialog::init()
 
     connect(ui.browsePushButton       , &QPushButton::clicked, this, &OptionsDialog::browse);
     connect(ui.checkUpdatesPushButton , &QPushButton::clicked, this, &OptionsDialog::checkUpdatesNow);
-    connect(ui.historyPushButton      , &QPushButton::clicked, this, &OptionsDialog::viewHistory);
 
     connect(ui.windowPickerCheckBox, &QCheckBox::toggled, ui.windowPickerHotkeyWidget, &HotkeyWidget::setEnabled);
 
@@ -659,53 +572,9 @@ void OptionsDialog::init()
     connect(ui.startupCheckBox, &QCheckBox::toggled   , ui.startupHideCheckBox, &QCheckBox::setEnabled);
     connect(ui.trayCheckBox   , &QCheckBox::toggled   , ui.messageCheckBox    , &QCheckBox::setEnabled);
 
-    // Auto-upload disables the default action button in the previews.
-    connect(ui.uploadCheckBox, &QCheckBox::toggled, [&](bool checked) {
-        ui.previewDefaultActionLabel->setDisabled(checked);
-        ui.previewDefaultActionComboBox->setDisabled(checked);
-        ui.directoryHotkeyWidget->setEnabled(checked);
-    });
-
-    auto conflictWarning = [](bool fullConflict, QWidget *w) {
-        if (fullConflict) {
-            QToolTip::showText(QCursor::pos(), tr("<font color=\"darkRed\">This setting conflicts with the Screenshot Clipboard setting, which has been disabled.</font>"), w);
-        } else {
-            QToolTip::showText(QCursor::pos(), tr("<b>This setting might conflict with the Screenshot Clipboard setting!</b>"), w);
-        }
-    };
-
-    connect(ui.uploadCheckBox, &QCheckBox::toggled, [&](bool checked) {
-        if (ui.urlClipboardCheckBox->isChecked() && ui.clipboardCheckBox->isChecked()) {
-            ui.clipboardGroupBox->setDisabled(checked);
-
-            if (checked) {
-                conflictWarning(true, ui.uploadCheckBox);
-            }
-        }
-    });
-
-    connect(ui.urlClipboardCheckBox, &QCheckBox::toggled, [&](bool checked) {
-        if (ui.uploadCheckBox->isChecked() && ui.clipboardCheckBox->isChecked()) {
-            ui.clipboardGroupBox->setDisabled(checked);
-
-            if (checked) {
-                conflictWarning(true, ui.urlClipboardCheckBox);
-            }
-        } else if (ui.clipboardCheckBox->isChecked()) {
-            conflictWarning(false, ui.urlClipboardCheckBox);
-        }
-    });
-
     connect(ui.mainLabel ,           &QLabel::linkActivated, this, &OptionsDialog::openUrl);
     connect(ui.licenseAboutLabel,    &QLabel::linkActivated, this, &OptionsDialog::openUrl);
     connect(ui.linksLabel,           &QLabel::linkActivated, this, &OptionsDialog::openUrl);
-    connect(ui.uploadSslWarningLabel,&QLabel::linkActivated, this, &OptionsDialog::openUrl);
-
-    connect(ui.tabWidget, &QTabWidget::currentChanged, [&](int index) {
-        if (index == 2 && ui.uploadServiceStackWidget->currentIndex() == 0 && !ui.imgurOptions->mCurrentUser.isEmpty() && ui.imgurOptions->ui.albumComboBox->count() == 1) {
-            QTimer::singleShot(20, ui.imgurOptions, &ImgurOptionsWidget::requestAlbumList);
-        }
-    });
 }
 
 void OptionsDialog::namingOptions()
