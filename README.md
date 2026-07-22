@@ -31,12 +31,6 @@ mingw32-make            # or nmake / jom for an MSVC kit
 To produce a standalone, redistributable folder, run `windeployqt` on the built
 `duskscreen.exe` (and copy the `sounds/` folder next to it).
 
-## Server / update endpoint
-
-The optional update check and the "home page" / "what's new" links point at the base
-URL configured as `APP_URL` in [`version.pri`](version.pri). See
-[`docs/server-setup.md`](docs/server-setup.md) for what the server needs to serve.
-
 ## License
 
 GPL v2-or-later, unchanged from upstream — see [LICENSE](LICENSE).
