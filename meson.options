@@ -1,0 +1,2 @@
+option('app_url', type: 'string', value: 'https://duskscreen.com',
+  description: 'Homepage + updater version/whatsnew endpoint base URL')
