@@ -47,8 +47,20 @@ if host_machine.system() == 'linux'
   app_deps += meson.get_compiler('cpp').find_library('X11')
 endif
 
+platform_sources = []
+
+if host_machine.system() == 'windows'
+  windows = import('windows')
+  platform_sources += windows.compile_resources('platform/win/duskscreen.rc',
+    depend_files: ['images/LS.ico', 'platform/win/duskscreen.manifest'])
+  cc = meson.get_compiler('cpp')
+  foreach l : ['gdi32', 'user32', 'ole32', 'shell32', 'shlwapi', 'comctl32']
+    app_deps += cc.find_library(l)
+  endforeach
+endif
+
 executable('duskscreen',
-  sources: app_sources + moc + ui + qrc,
+  sources: app_sources + moc + ui + qrc + platform_sources,
   dependencies: app_deps,
   include_directories: include_directories('.'),
   win_subsystem: 'windows',
