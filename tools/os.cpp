@@ -71,21 +71,86 @@ QPair<QPixmap, QPoint> os::cursor()
     QPoint hotspot;
 
     CURSORINFO cursorInfo;
+    ZeroMemory(&cursorInfo, sizeof(cursorInfo));
     cursorInfo.cbSize = sizeof(cursorInfo);
-    ::GetCursorInfo(&cursorInfo);
 
+    if (!::GetCursorInfo(&cursorInfo) || !cursorInfo.hCursor) {
+        return QPair<QPixmap, QPoint>(pixmap, hotspot);
+    }
+
+    // Note: hCursor is owned by the system, it must not be destroyed here.
     HICON cursor = cursorInfo.hCursor;
-
-    ICONINFO iconInfo;
-    ::GetIconInfo(cursor, &iconInfo);
 
     ICONINFO info;
     ZeroMemory(&info, sizeof(info));
 
     if (::GetIconInfo(cursor, &info)) {
         if (info.hbmColor) {
-            // Qt 6 replacement for QtWin::fromHBITMAP(.., HBitmapAlpha).
-            pixmap = QPixmap::fromImage(QImage::fromHBITMAP(info.hbmColor));
+            // Qt 6's QImage::fromHBITMAP() always returns RGB32, discarding the
+            // alpha channel (QtWin::fromHBITMAP(.., HBitmapAlpha) used to keep it).
+            // For a 32-bit colour cursor that turns the transparent area around
+            // the arrow into an opaque black box, so read the bits ourselves.
+            BITMAP bm;
+            ZeroMemory(&bm, sizeof(bm));
+
+            if (::GetObject(info.hbmColor, sizeof(bm), &bm) && bm.bmWidth > 0 && bm.bmHeight > 0) {
+                const int w = bm.bmWidth;
+                const int h = bm.bmHeight;
+
+                BITMAPINFO bmi;
+                ZeroMemory(&bmi, sizeof(bmi));
+                bmi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
+                bmi.bmiHeader.biWidth       = w;
+                bmi.bmiHeader.biHeight      = -h; // Negative height = top-down rows
+                bmi.bmiHeader.biPlanes      = 1;
+                bmi.bmiHeader.biBitCount    = 32;
+                bmi.bmiHeader.biCompression = BI_RGB;
+
+                // 32bpp: both Qt and the DIB use a w * 4 stride, so the bits map directly.
+                QImage image(w, h, QImage::Format_ARGB32);
+
+                HDC hdc = ::GetDC(nullptr);
+                const bool gotBits = ::GetDIBits(hdc, info.hbmColor, 0, h, image.bits(), &bmi, DIB_RGB_COLORS) != 0;
+                ::ReleaseDC(nullptr, hdc);
+
+                if (gotBits) {
+                    // Older colour cursors carry no per-pixel alpha and take their
+                    // transparency from the AND mask instead.
+                    bool hasAlpha = false;
+
+                    for (int y = 0; y < h && !hasAlpha; ++y) {
+                        const QRgb *line = reinterpret_cast<const QRgb *>(image.constScanLine(y));
+
+                        for (int x = 0; x < w; ++x) {
+                            if (qAlpha(line[x]) != 0) {
+                                hasAlpha = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!hasAlpha && info.hbmMask) {
+                        const QImage mask = QImage::fromHBITMAP(info.hbmMask).convertToFormat(QImage::Format_ARGB32);
+
+                        for (int y = 0; y < h; ++y) {
+                            QRgb *dst = reinterpret_cast<QRgb *>(image.scanLine(y));
+                            const QRgb *src = (y < mask.height()) ? reinterpret_cast<const QRgb *>(mask.constScanLine(y)) : nullptr;
+
+                            for (int x = 0; x < w; ++x) {
+                                // AND mask: black (0) means opaque, white means transparent.
+                                const bool opaque = src && x < mask.width() && qRed(src[x]) == 0;
+                                dst[x] = opaque ? (dst[x] | 0xff000000) : (dst[x] & 0x00ffffff);
+                            }
+                        }
+                    }
+
+                    pixmap = QPixmap::fromImage(image);
+                }
+            }
+
+            if (pixmap.isNull()) { // Better a cursor with a black box than no cursor at all.
+                pixmap = QPixmap::fromImage(QImage::fromHBITMAP(info.hbmColor));
+            }
         } else {
             QBitmap orig(QPixmap::fromImage(QImage::fromHBITMAP(info.hbmMask)));
             QImage img = orig.toImage();
@@ -122,8 +187,6 @@ QPair<QPixmap, QPoint> os::cursor()
         if (info.hbmColor) {
             ::DeleteObject(info.hbmColor);
         }
-
-        ::DeleteObject(cursor);
     }
 
     return QPair<QPixmap, QPoint>(pixmap, hotspot);
