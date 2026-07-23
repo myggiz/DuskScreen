@@ -146,7 +146,7 @@ UGlobalHotkeys::~UGlobalHotkeys()
         UnregisterHotKey((HWND)winId(), *i);
     }
 #elif defined(Q_OS_LINUX)
-    xcb_key_symbols_free(X11KeySymbs);
+    if (X11KeySymbs) xcb_key_symbols_free(X11KeySymbs);
 #endif
 }
 
