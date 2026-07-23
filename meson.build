@@ -1,6 +1,6 @@
 project('duskscreen', 'cpp',
   version: '1.0.3',
-  meson_version: '>=1.0',
+  meson_version: '>=1.1',
   default_options: ['cpp_std=c++17', 'warning_level=2'])
 
 qt6 = import('qt6')
