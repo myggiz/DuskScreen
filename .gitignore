@@ -5,6 +5,11 @@ dist/
 
 # Meson
 /build*/
-/subprojects/*/         # (none downloaded; guards future wraps)
+
+# Ignore any downloaded wrap subprojects; keep the vendored ones tracked
+/subprojects/*/
 !/subprojects/singleapplication/
 !/subprojects/uglobalhotkey/
+
+# Meson-generated wrap lockfile (scratch)
+/subprojects/.wraplock
