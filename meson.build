@@ -16,5 +16,6 @@ add_project_arguments(
   language: 'cpp')
 
 singleapplication_dep = subproject('singleapplication').get_variable('singleapplication_dep')
+uglobalhotkey_dep = subproject('uglobalhotkey').get_variable('uglobalhotkey_dep')
 
 message('DuskScreen: Qt6 = ' + qt6_dep.version())
