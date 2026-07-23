@@ -47,12 +47,28 @@ if host_machine.system() == 'linux'
   app_deps += meson.get_compiler('cpp').find_library('X11')
 endif
 
+# Generate the versioned Windows resource script from project(version:) so the
+# version lives in exactly one place. Run unconditionally (it is cheap) so the
+# substitution is exercised on every platform, not only on Windows.
+ver_parts = meson.project_version().split('.')
+rc_conf = configuration_data()
+rc_conf.set('VER_COMMA', ver_parts[0] + ',' + ver_parts[1] + ',' + ver_parts[2] + ',0')
+rc_conf.set('VER_DOT', meson.project_version())
+duskscreen_rc = configure_file(
+  input: 'platform/win/duskscreen.rc.in',
+  output: 'duskscreen.rc',
+  configuration: rc_conf)
+
 platform_sources = []
 
 if host_machine.system() == 'windows'
   windows = import('windows')
-  platform_sources += windows.compile_resources('platform/win/duskscreen.rc',
-    depend_files: ['images/LS.ico', 'platform/win/duskscreen.manifest'])
+  # include_directories('.') lets the resource compiler resolve the icon/manifest
+  # paths (relative to the project source root) even though the generated .rc
+  # lives in the build directory — portable across windres and MSVC rc.exe.
+  platform_sources += windows.compile_resources(duskscreen_rc,
+    include_directories: include_directories('.'),
+    depend_files: files('images/LS.ico', 'platform/win/duskscreen.manifest'))
   cc = meson.get_compiler('cpp')
   foreach l : ['gdi32', 'user32', 'ole32', 'shell32', 'shlwapi', 'comctl32']
     app_deps += cc.find_library(l)

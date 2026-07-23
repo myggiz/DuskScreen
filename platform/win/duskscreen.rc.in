@@ -1,0 +1,45 @@
+#include <windows.h>
+
+// NOTE: This is a Meson template. The version fields (@VER_COMMA@ / @VER_DOT@)
+// are substituted by configure_file() from project(version:) in the top-level
+// meson.build — the version lives in exactly one place. Do not edit the
+// generated build/duskscreen.rc; edit this .in file.
+//
+// The icon and manifest are referenced by paths relative to the project source
+// root, which Meson passes to the resource compiler via include_directories();
+// this keeps them resolvable even though the generated .rc lives in the build
+// directory.
+
+// Application icon
+IDI_ICON1 ICON "images/LS.ico"
+
+// Application manifest (Common-Controls v6 + PerMonitorV2 DPI awareness)
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "platform/win/duskscreen.manifest"
+
+// File metadata shown in the Windows Explorer "Details" tab
+// (qmake previously auto-generated this from version.pri).
+1 VERSIONINFO
+ FILEVERSION    @VER_COMMA@
+ PRODUCTVERSION @VER_COMMA@
+ FILEOS         0x00040004L
+ FILETYPE       0x00000001L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName",      "Myggiz"
+            VALUE "FileDescription",  "DuskScreen Screenshot Tool"
+            VALUE "FileVersion",      "@VER_DOT@"
+            VALUE "InternalName",     "duskscreen"
+            VALUE "LegalCopyright",   "Copyright (C) 2008-2021 Christian Kaiser, (C) 2026 Myggiz"
+            VALUE "OriginalFilename", "duskscreen.exe"
+            VALUE "ProductName",      "DuskScreen"
+            VALUE "ProductVersion",   "@VER_DOT@"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1200
+    END
+END
