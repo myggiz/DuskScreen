@@ -17,8 +17,13 @@ elif host_machine.system() == 'windows'
   deps += cc.find_library('user32')
 endif
 
+# uglobalhotkeys.h and ukeysequence.h both declare Q_OBJECT (signals/slots),
+# so they need moc'd like any other QObject-derived header.
+moc = qt6.compile_moc(headers: ['uglobalhotkeys.h', 'ukeysequence.h'], dependencies: deps,
+  include_directories: include_directories('.'))
+
 lib = static_library('uglobalhotkey',
-  ['ukeysequence.cpp', 'uglobalhotkeys.cpp'],
+  ['ukeysequence.cpp', 'uglobalhotkeys.cpp', moc],
   dependencies: deps,
   cpp_args: extra_args)
 

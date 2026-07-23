@@ -7,8 +7,13 @@ qt6 = import('qt6')
 # No such file or directory).
 qt_dep = dependency('qt6', modules: ['Core', 'Network', 'Widgets'])
 
+# singleapplication.h declares Q_OBJECT (signals/slots), so it needs moc'd
+# just like any other QObject-derived header.
+moc = qt6.compile_moc(headers: 'singleapplication.h', dependencies: qt_dep,
+  include_directories: include_directories('.'))
+
 lib = static_library('singleapplication',
-  'singleapplication.cpp',
+  ['singleapplication.cpp', moc],
   dependencies: qt_dep)
 
 singleapplication_dep = declare_dependency(

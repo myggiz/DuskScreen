@@ -48,7 +48,7 @@
 #include <tools/os.h>
 #include <tools/screenshot.h>
 #include <tools/screenshotmanager.h>
-#include <tools/UGlobalHotkey/uglobalhotkeys.h>
+#include <uglobalhotkeys.h>
 
 #include <updater/updater.h>
 

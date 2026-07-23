@@ -20,7 +20,7 @@
 #include <QLocale>
 
 #include <tools/os.h>
-#include "tools/SingleApplication/singleapplication.h"
+#include "singleapplication.h"
 
 #include <duskscreenwindow.h>
 

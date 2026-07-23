@@ -17,6 +17,7 @@
  *
  */
 #include <QApplication>
+#include <QGuiApplication>
 #include <QLabel>
 #include <QMouseEvent>
 #include <QPushButton>
@@ -38,11 +39,21 @@
     #endif
 
 #elif defined(Q_OS_LINUX)
-    #include <QX11Info>
+    #include <QtGui/qguiapplication_platform.h>
     #include <X11/X.h>
     #include <X11/Xlib.h>
     #include <X11/Xutil.h>
     #include <X11/Xatom.h>
+
+// X11 display handle for the current QGuiApplication, or nullptr when the
+// platform plugin isn't xcb (e.g. Wayland). Mirrors os.cpp's helper; this
+// file is X11-only pre-existing behavior (used the now-removed Qt5
+// X11Extras display accessor).
+static Display *x11Display()
+{
+    auto *x11app = qGuiApp->nativeInterface<QNativeInterface::QX11Application>();
+    return x11app ? x11app->display() : nullptr;
+}
 #endif
 
 WindowPicker::WindowPicker() : QWidget(0), mCrosshair(":/icons/picker"), mWindowLabel(Q_NULLPTR), mTaken(false), mCurrentWindow(0)
@@ -191,10 +202,10 @@ void WindowPicker::mouseMoveEvent(QMouseEvent *event)
     char **text;
     int count;
 
-    if (XGetTextProperty(QX11Info::display(), cWindow, &tp, XA_WM_NAME) != 0 && tp.value != NULL) {
+    if (XGetTextProperty(x11Display(), cWindow, &tp, XA_WM_NAME) != 0 && tp.value != NULL) {
         if (tp.encoding == XA_STRING) {
             windowName = QString::fromLocal8Bit((const char *) tp.value);
-        } else if (XmbTextPropertyToTextList(QX11Info::display(), &tp, &text, &count) == Success &&
+        } else if (XmbTextPropertyToTextList(x11Display(), &tp, &text, &count) == Success &&
                    text != NULL && count > 0) {
             windowName = QString::fromLocal8Bit(text[0]);
             XFreeStringList(text);
@@ -212,21 +223,21 @@ void WindowPicker::mouseMoveEvent(QMouseEvent *event)
     int width = 0;
     int height = 0;
 
-    Atom _net_wm_icon = XInternAtom(QX11Info::display(), "_NET_WM_ICON", False);
+    Atom _net_wm_icon = XInternAtom(x11Display(), "_NET_WM_ICON", False);
 
-    if (XGetWindowProperty(QX11Info::display(), cWindow, _net_wm_icon, 0, 1, False,
+    if (XGetWindowProperty(x11Display(), cWindow, _net_wm_icon, 0, 1, False,
                            XA_CARDINAL, &type_ret, &format, &n, &extra, (unsigned char **)&data) == Success && data) {
         width = data[0];
         XFree(data);
     }
 
-    if (XGetWindowProperty(QX11Info::display(), cWindow, _net_wm_icon, 1, 1, False,
+    if (XGetWindowProperty(x11Display(), cWindow, _net_wm_icon, 1, 1, False,
                            XA_CARDINAL, &type_ret, &format, &n, &extra, (unsigned char **)&data) == Success && data) {
         height = data[0];
         XFree(data);
     }
 
-    if (XGetWindowProperty(QX11Info::display(), cWindow, _net_wm_icon, 2, width * height, False,
+    if (XGetWindowProperty(x11Display(), cWindow, _net_wm_icon, 2, width * height, False,
                            XA_CARDINAL, &type_ret, &format, &n, &extra, (unsigned char **)&data) == Success && data) {
         QImage img(data, width, height, QImage::Format_ARGB32);
         mWindowIcon->setPixmap(QPixmap::fromImage(img));
@@ -290,7 +301,7 @@ void WindowPicker::mouseReleaseEvent(QMouseEvent *event)
         close();
 
 #ifdef Q_OS_LINUX
-        emit pixmap(QPixmap::grabWindow(mCurrentWindow));
+        emit pixmap(QGuiApplication::primaryScreen()->grabWindow(mCurrentWindow));
 #else
         emit pixmap(os::grabWindow((WId)nativeWindow));
 #endif
