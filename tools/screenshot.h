@@ -115,7 +115,10 @@ signals:
 private:
     void activeWindow();
     const QString extension() const;
-    void grabDesktop();
+    // Area mode passes false: the cursor would be stamped into the background at
+    // the position it had when the capture was triggered, not where the selection
+    // ends up, so it is only ever an artifact there.
+    void grabDesktop(bool includeCursor = true);
     const QString newFileName() const;
     void selectedArea();
     void selectedWindow();

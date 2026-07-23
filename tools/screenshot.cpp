@@ -291,7 +291,8 @@ void Screenshot::take()
 
 void Screenshot::refresh()
 {
-    grabDesktop();
+    // Only reached from the area selector (F5), so keep it cursor-free too.
+    grabDesktop(false);
 }
 
 //
@@ -343,7 +344,7 @@ const QString Screenshot::extension() const
     return QStringLiteral(".png");
 }
 
-void Screenshot::grabDesktop()
+void Screenshot::grabDesktop(bool includeCursor)
 {
     QRect geometry;
     QPoint cursorPosition = QCursor::pos();
@@ -380,7 +381,7 @@ void Screenshot::grabDesktop()
     mPixmap = QApplication::primaryScreen()->grabWindow(0, geometry.x(), geometry.y(), geometry.width(), geometry.height());
     mPixmap.setDevicePixelRatio(QApplication::primaryScreen()->devicePixelRatio());
 
-    if (mOptions.cursor && !mPixmap.isNull()) {
+    if (mOptions.cursor && includeCursor && !mPixmap.isNull()) {
         QPainter painter(&mPixmap);
         auto cursorInfo = os::cursor();
         auto cursorPixmap = cursorInfo.first;
@@ -422,7 +423,7 @@ const QString Screenshot::newFileName() const
 
 void Screenshot::selectedArea()
 {
-    grabDesktop();
+    grabDesktop(false);
 
     if (mPixmap.isNull()) {
         return;
