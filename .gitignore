@@ -6,9 +6,10 @@ dist/
 # Meson
 /build*/
 
-# Ignore any downloaded wrap subprojects; keep the vendored ones tracked
+# Ignore downloaded wrap subprojects (e.g. singleapplication, fetched via .wrap);
+# keep the still-vendored lib and the packagefiles overlay tracked.
 /subprojects/*/
-!/subprojects/singleapplication/
+!/subprojects/packagefiles/
 !/subprojects/uglobalhotkey/
 
 # Meson-generated wrap lockfile (scratch)

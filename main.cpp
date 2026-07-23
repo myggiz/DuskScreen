@@ -17,7 +17,10 @@
  *
  */
 #include <QApplication>
+#include <QByteArray>
+#include <QDataStream>
 #include <QLocale>
+#include <QStringList>
 
 #include <tools/os.h>
 #include "singleapplication.h"
@@ -34,7 +37,23 @@ int main(int argc, char *argv[])
     QApplication::setApplicationName("DuskScreen");
     QApplication::setApplicationVersion(APP_VERSION);
 
-    SingleApplication application(argc, argv);
+    // allowSecondary = true so the constructor RETURNS on a second launch (letting
+    // us forward args below) instead of calling ::exit() internally, which would
+    // make the isSecondary() block below dead code.
+    SingleApplication application(argc, argv, true);
+
+    // A second launch forwards its command-line arguments to the already-running
+    // primary instance and then exits. (itay-grudev SingleApplication replaces the
+    // old fork's automatic instanceArguments() signal with explicit
+    // sendMessage()/receivedMessage() over its inter-instance channel.)
+    if (application.isSecondary()) {
+        QByteArray payload;
+        QDataStream out(&payload, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_6_0);
+        out << application.arguments();
+        application.sendMessage(payload);
+        return 0;
+    }
 
     application.setQuitOnLastWindowClosed(false);
 
@@ -46,7 +65,17 @@ int main(int argc, char *argv[])
         lightscreen.show();
     }
 
-    QObject::connect(&application, &SingleApplication::instanceArguments, &lightscreen, &DuskScreenWindow::executeArguments);
+    QObject::connect(&application, &SingleApplication::receivedMessage, &lightscreen,
+        [&lightscreen](quint32 /*instanceId*/, const QByteArray &message) {
+            QDataStream in(message);
+            in.setVersion(QDataStream::Qt_6_0);
+            QStringList arguments;
+            in >> arguments;
+            if (in.status() != QDataStream::Ok) {
+                return;  // ignore a malformed/truncated inter-instance message
+            }
+            lightscreen.executeArguments(arguments);
+        });
     QObject::connect(&lightscreen, &DuskScreenWindow::finished, &application, &SingleApplication::quit);
 
     return application.exec();

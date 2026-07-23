@@ -1,0 +1,12 @@
+[wrap-git]
+url = https://github.com/itay-grudev/SingleApplication.git
+# Pinned to the immutable commit SHA that tag v3.5.6 points to. A git tag is
+# mutable (can be force-repointed); a SHA is tamper-evident and reproducible.
+# No shallow "depth=": fetching an arbitrary SHA shallowly is not reliably
+# supported by all git servers (per the Meson wrap manual), so we full-clone.
+revision = a218603d76a55dddb65b84f2b49ecaa8efc074ea
+directory = singleapplication
+patch_directory = singleapplication
+
+[provide]
+singleapplication = singleapplication_dep

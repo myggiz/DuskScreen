@@ -50,6 +50,9 @@ endif
 # Generate the versioned Windows resource script from project(version:) so the
 # version lives in exactly one place. Run unconditionally (it is cheap) so the
 # substitution is exercised on every platform, not only on Windows.
+# NOTE: assumes project(version:) is numeric MAJOR.MINOR.PATCH (VERSIONINFO
+# FILEVERSION requires integer fields). A pre-release suffix (e.g. 1.0.3-rc1)
+# would need this split adjusted.
 ver_parts = meson.project_version().split('.')
 rc_conf = configuration_data()
 rc_conf.set('VER_COMMA', ver_parts[0] + ',' + ver_parts[1] + ',' + ver_parts[2] + ',0')
