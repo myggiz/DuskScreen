@@ -20,7 +20,3 @@ Makefile
 *-build-*
 build
 build*
-*build
-
-# Meson build definition — not a qmake build-output dir despite matching *build above.
-!meson.build

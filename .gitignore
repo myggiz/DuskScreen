@@ -1,15 +1,10 @@
 *.2-pre1
 *.autosave
-*.pro.*
-release/
-debug/
-Makefile*
-.qmake.stash
-object_script.*
-build_errors.log
 *.o
-ui_*.h
-moc_*.cpp
-qrc_*.cpp
-*_resource.rc
 dist/
+
+# Meson
+/build*/
+/subprojects/*/         # (none downloaded; guards future wraps)
+!/subprojects/singleapplication/
+!/subprojects/uglobalhotkey/

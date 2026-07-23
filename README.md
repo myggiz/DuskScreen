@@ -41,15 +41,28 @@ The source is all here, and the binaries are never packed or obfuscated. See
 
 ## Building
 
-Requires **Qt 6.x** (tested with 6.11, MinGW 13) and `qmake`:
+DuskScreen uses **Meson**. It needs Qt 6, Meson, Ninja, and a C++17 compiler.
 
+### Linux (Arch example)
 ```bash
-qmake duskscreen.pro
-mingw32-make            # or nmake / jom for an MSVC kit
+sudo pacman -S --needed meson ninja gcc pkgconf qt6-base qt6-multimedia
+meson setup build
+meson compile -C build
+./build/duskscreen
 ```
 
-To produce a standalone, redistributable folder, run `windeployqt` on the built
-`duskscreen.exe` (and copy the `sounds/` folder next to it).
+### Windows (MSYS2 / MinGW)
+```bash
+pacman -S --needed mingw-w64-x86_64-{toolchain,meson,ninja,pkgconf,qt6-base,qt6-multimedia}
+meson setup build
+meson compile -C build
+```
+Then run `windeployqt` on `build/duskscreen.exe` for a redistributable folder.
+
+### Optional: self-contained Qt (no system install)
+Use [`aqtinstall`](https://github.com/miurahr/aqtinstall) to fetch a prebuilt Qt into a local
+prefix, then point Meson at it via `PKG_CONFIG_PATH`/`CMAKE_PREFIX_PATH`. CI uses
+`jurplel/install-qt-action`.
 
 ## License
 
