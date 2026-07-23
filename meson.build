@@ -15,4 +15,6 @@ add_project_arguments(
   '-DAPP_URL="' + app_url + '"',
   language: 'cpp')
 
+singleapplication_dep = subproject('singleapplication').get_variable('singleapplication_dep')
+
 message('DuskScreen: Qt6 = ' + qt6_dep.version())
