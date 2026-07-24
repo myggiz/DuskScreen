@@ -15,6 +15,12 @@ add_project_arguments(
   '-DAPP_URL="' + app_url + '"',
   language: 'cpp')
 
+if host_machine.system() == 'windows'
+  # Qt 6 CMake sets these transitively; the Meson qt6 module does not.
+  # Match qmake/Qt 6 CMake so Win32 macros resolve to the wide-char variants.
+  add_project_arguments('-DUNICODE', '-D_UNICODE', language: 'cpp')
+endif
+
 singleapplication_dep = subproject('singleapplication').get_variable('singleapplication_dep')
 uglobalhotkey_dep = subproject('uglobalhotkey').get_variable('uglobalhotkey_dep')
 
