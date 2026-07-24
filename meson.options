@@ -1,2 +1,4 @@
 option('app_url', type: 'string', value: 'https://duskscreen.com',
   description: 'Homepage + updater version/whatsnew endpoint base URL')
+option('tests', type: 'feature', value: 'auto',
+  description: 'Build the GoogleTest unit-test suite (requires system gtest).')

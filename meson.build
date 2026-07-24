@@ -93,3 +93,7 @@ executable('duskscreen',
   include_directories: include_directories('.'),
   win_subsystem: 'windows',
   install: true)
+
+if not get_option('tests').disabled()
+  subdir('tests')
+endif
