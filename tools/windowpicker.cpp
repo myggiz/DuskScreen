@@ -183,6 +183,13 @@ void WindowPicker::mouseMoveEvent(QMouseEvent *event)
         mWindowIcon->setPixmap(QPixmap());
     }
 #elif defined(Q_OS_LINUX)
+    if (!x11Display()) {
+        // non-X11 (e.g. Wayland): window picking is unavailable — don't touch Xlib.
+        mWindowIcon->setPixmap(QPixmap());
+        mWindowLabel->setText("");
+        return;
+    }
+
     Window cWindow = os::windowUnderCursor(false);
 
     if (cWindow == mCurrentWindow) {

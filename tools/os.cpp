@@ -396,6 +396,10 @@ Window os::findRealWindow(Window w, int depth)
         return None;
     }
 
+    if (!x11Display()) {
+        return None;  // non-X11 (e.g. Wayland): no X11 window tree to query
+    }
+
     static Atom wm_state = XInternAtom(x11Display(), "WM_STATE", False);
     Atom type;
     int format;
@@ -440,6 +444,11 @@ Window os::windowUnderCursor(bool includeDecorations)
     uint mask;
     int rootX, rootY, winX, winY;
     Display *display = x11Display();
+
+    if (!display) {
+        return None;  // non-X11 (e.g. Wayland): no pointer/root window to query
+    }
+
     Window rootWindow = DefaultRootWindow(display);
 
     XQueryPointer(display, rootWindow, &root, &child,
