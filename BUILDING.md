@@ -56,6 +56,10 @@ meson compile -C build
 Then run [`windeployqt`](https://doc.qt.io/qt-6/windows-deployment.html) on
 `build/duskscreen.exe` to produce a redistributable folder with the required Qt DLLs.
 
+For iterative development, skip the deploy step and launch through
+[`meson devenv`](https://mesonbuild.com/Commands.html#devenv) — see
+[Running from the build tree](#running-from-the-build-tree).
+
 ### Self-contained Qt (no system install)
 
 If you don't have (or don't want) a system Qt, fetch a prebuilt Qt into a local
@@ -114,6 +118,23 @@ Set with `-Doption=value` at `meson setup` (or change later with
 
 Standard Meson options also apply, e.g. `--buildtype=debug|release`,
 `-Db_coverage=true`, `--prefix`. `meson install -C build` installs the executable.
+
+## Running from the build tree
+
+To launch the freshly built executable without installing or bundling DLLs, use
+Meson's built-in [developer environment](https://mesonbuild.com/Commands.html#devenv):
+
+```bash
+meson devenv -C build ./duskscreen        # ./duskscreen.exe on Windows
+# or open an interactive shell in the devenv:
+meson devenv -C build
+```
+
+`meson devenv` sets `PATH` (and friends) to whatever the build tree needs at
+runtime. On Windows, `meson.build` extends it with Qt's `bindir` so `Qt6*.dll`
+and the MinGW runtime resolve without a `windeployqt` step. This is the
+recommended way to run the app during development — IDE run configurations
+(CLion, VS Code Meson extension, Qt Creator) can point at the same command.
 
 ## Testing
 
