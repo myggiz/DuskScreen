@@ -45,66 +45,20 @@ The source is all here, and the binaries are never packed or obfuscated. See
 
 ## Building
 
-DuskScreen uses **Meson**. It needs Qt 6, Meson, Ninja, and a C++17 compiler.
+DuskScreen uses **Meson**. It needs Qt 6, Meson, Ninja, and a C++17 compiler. A
+single `meson setup` fetches the wrapped dependencies automatically (network access
+is needed the first time you configure).
 
-### Linux (Arch example)
 ```bash
-sudo pacman -S --needed meson ninja gcc pkgconf qt6-base qt6-multimedia
 meson setup build
 meson compile -C build
-./build/duskscreen
+./build/duskscreen        # duskscreen.exe on Windows
+meson test -C build       # run the unit suite
 ```
 
-### Windows (MSYS2 / MinGW)
-```bash
-pacman -S --needed mingw-w64-x86_64-{toolchain,meson,ninja,pkgconf,qt6-base,qt6-multimedia}
-meson setup build
-meson compile -C build
-```
-Then run `windeployqt` on `build/duskscreen.exe` for a redistributable folder.
-
-### Optional: self-contained Qt (no system install)
-Use [`aqtinstall`](https://github.com/miurahr/aqtinstall) to fetch a prebuilt Qt into a local
-prefix, then point Meson at it via `PKG_CONFIG_PATH`/`CMAKE_PREFIX_PATH`. CI uses
-`jurplel/install-qt-action`.
-
-## Testing & coverage
-
-DuskScreen has a GoogleTest unit suite. gtest is sourced via a Meson wrap
-(`subprojects/gtest.wrap`), so no host install is required — `meson setup` uses a
-system `gtest` if one is present, otherwise fetches it at configure time. Tests run
-headless and hit no network. (`-Dtests=disabled` builds the app without gtest;
-CI should use `-Dtests=enabled` so a missing suite is an error, not a silent skip.)
-
-```bash
-meson setup build
-meson test -C build            # runs the unit suite
-```
-
-### Coverage (optional, dev/CI only)
-
-Coverage requires **`gcovr` ≥ 5.0** on `PATH` (`pip install 'gcovr>=5.0'` or your
-distro's package). Unlike gtest, gcovr is **not** vendored as a subproject and
-cannot be: Meson's coverage machinery (`ninjabackend` → `tooldetect.detect_gcovr`)
-shells out to a literal `gcovr` on `PATH` at configure time and never consults
-`find_program`/`override_find_program`, so a wrap-provided gcovr would be ignored.
-This matches every mainstream Meson project — gcovr, like `lcov`/`genhtml`, is an
-external dev prerequisite, not a build dependency. gcovr is required only for the
-`coverage-*` targets below; **building and running the tests need only Qt6**
-(+ xcb/X11), with gtest fetched by the wrap.
-
-```bash
-meson setup build-cov -Db_coverage=true --buildtype=debug
-meson test -C build-cov
-ninja -C build-cov coverage-html   # → build-cov/meson-logs/coveragereport/index.html
-# or: coverage-text (→ meson-logs/coverage.txt), coverage-xml (→ meson-logs/coverage.xml)
-```
-Coverage is scoped to project source via `gcovr.cfg`: generated moc/ui/qrc files
-and vendored subprojects are excluded — **except** `uglobalhotkey/ukeysequence.{cpp,h}`,
-which we patch (Qt 6 port + `operator[]` bounds fix) and unit-test, so it counts as
-first-party rather than pristine-external. If a combined
-`ninja … coverage-html coverage-xml` invocation fails transiently under gcovr,
-run the coverage targets as separate invocations.
+See **[BUILDING.md](BUILDING.md)** for the full guide — prerequisites, per-platform
+instructions (Linux / Windows-MSYS2 / self-contained Qt), build options, testing,
+coverage, and troubleshooting.
 
 ## License
 
