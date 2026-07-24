@@ -154,6 +154,16 @@ transiently under gcovr, run the coverage targets as separate invocations.
 - **First `meson setup` fails with a network/wrap error** — the wraps are fetched at
   configure time; ensure network access on the first configure. Subsequent configures
   reuse `subprojects/packagecache/`.
+- **`meson setup` fails on MSYS2 with `CERTIFICATE_VERIFY_FAILED` fetching wraps** —
+  MSYS2's mingw64 Python ships without a CA trust store, so `urllib` (which Meson uses
+  to download wraps) rejects every HTTPS response. Install the CA packages and point
+  Python at the bundle:
+  ```bash
+  pacman -S --needed mingw-w64-x86_64-ca-certificates mingw-w64-x86_64-python-certifi
+  echo 'export SSL_CERT_FILE=/mingw64/etc/ssl/certs/ca-bundle.crt' >> ~/.bashrc
+  ```
+  This is an MSYS2 packaging gap ([MINGW-packages#1086](https://github.com/msys2/MINGW-packages/issues/1086)),
+  not a DuskScreen issue.
 - **Qt 6 not found** — ensure the Qt 6 dev packages are installed and discoverable via
   `pkg-config` (`pkg-config --modversion Qt6Core`), or point `PKG_CONFIG_PATH` /
   `CMAKE_PREFIX_PATH` at your Qt prefix.
