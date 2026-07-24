@@ -190,6 +190,15 @@ transiently under gcovr, run the coverage targets as separate invocations.
   `CMAKE_PREFIX_PATH` at your Qt prefix.
 - **`gcovr` not found / coverage targets missing** — install `gcovr>=5.0`; it is a dev
   prerequisite, not a build dependency.
+- **`gcovr` install on MSYS2 fails (`No module named pip` / PEP 668 / `lxml` build
+  error)** — MSYS2's mingw64 Python ships without pip and rejects direct
+  `pip install` (PEP 668), and `gcovr`'s `lxml` dep needs `libxml2` headers to build
+  from source. Use pipx with the prebuilt lxml:
+  ```bash
+  pacman -S --needed mingw-w64-x86_64-python-pipx mingw-w64-x86_64-python-lxml
+  pipx install --system-site-packages 'gcovr>=5.0'
+  pipx ensurepath        # adds ~/.local/bin to PATH
+  ```
 
 ## Dependency provenance
 
