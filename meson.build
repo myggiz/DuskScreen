@@ -33,8 +33,8 @@ moc = qt6.compile_moc(headers: moc_headers, dependencies: qt6_dep,
 ui  = qt6.compile_ui(sources: ui_files)
 qrc = qt6.compile_resources(sources: 'duskscreen.qrc')
 
-app_sources = [
-  'main.cpp', 'duskscreenwindow.cpp',
+core_sources = [
+  'duskscreenwindow.cpp',
   'dialogs/areadialog.cpp', 'dialogs/namingdialog.cpp',
   'dialogs/optionsdialog.cpp', 'dialogs/updaterdialog.cpp',
   'tools/os.cpp', 'tools/screenshot.cpp', 'tools/screenshotmanager.cpp',
@@ -78,8 +78,17 @@ if host_machine.system() == 'windows'
   endforeach
 endif
 
+duskscreen_core = static_library('duskscreen_core',
+  sources: core_sources + moc + ui,     # NOT qrc — resources stay in the exe
+  dependencies: app_deps,
+  include_directories: include_directories('.'))
+
 executable('duskscreen',
-  sources: app_sources + moc + ui + qrc + platform_sources,
+  # ui is listed here too (not compiled twice - qt6.compile_ui only generates
+  # headers) purely so Meson adds duskscreen_core's private build dir to this
+  # target's include path; main.cpp includes ui_duskscreenwindow.h directly.
+  sources: ['main.cpp'] + ui + qrc + platform_sources,
+  link_with: duskscreen_core,
   dependencies: app_deps,
   include_directories: include_directories('.'),
   win_subsystem: 'windows',
