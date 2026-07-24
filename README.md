@@ -81,7 +81,18 @@ meson setup build
 meson test -C build            # runs the unit suite
 ```
 
-Coverage (needs `gcovr`):
+### Coverage (optional, dev/CI only)
+
+Coverage requires **`gcovr` ≥ 5.0** on `PATH` (`pip install 'gcovr>=5.0'` or your
+distro's package). Unlike gtest, gcovr is **not** vendored as a subproject and
+cannot be: Meson's coverage machinery (`ninjabackend` → `tooldetect.detect_gcovr`)
+shells out to a literal `gcovr` on `PATH` at configure time and never consults
+`find_program`/`override_find_program`, so a wrap-provided gcovr would be ignored.
+This matches every mainstream Meson project — gcovr, like `lcov`/`genhtml`, is an
+external dev prerequisite, not a build dependency. gcovr is required only for the
+`coverage-*` targets below; **building and running the tests need only Qt6**
+(+ xcb/X11), with gtest fetched by the wrap.
+
 ```bash
 meson setup build-cov -Db_coverage=true --buildtype=debug
 meson test -C build-cov
