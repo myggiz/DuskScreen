@@ -3,7 +3,12 @@
 # alongside the three Qt 6-ported source files in this same overlay. Full patch
 # breakdown lives one level up in subprojects/packagefiles/uglobalhotkey.PROVENANCE.md
 # (kept outside this patch_directory so it is not copied into the fetched build tree).
-project('uglobalhotkey', 'cpp', default_options: ['cpp_std=c++17'])
+# Upstream ckaiser/UGlobalHotkey publishes no tags or releases, so there is no
+# semver to adopt. The version encodes the pinned commit from uglobalhotkey.wrap
+# (revision 231b10144741b29037f0128bb7a1cd7176529f74) so `meson setup` reports the
+# exact fetched revision instead of "undefined".
+project('uglobalhotkey', 'cpp', version: '0-git.231b101',
+  default_options: ['cpp_std=c++17'])
 
 qt6 = import('qt6')
 cc = meson.get_compiler('cpp')
