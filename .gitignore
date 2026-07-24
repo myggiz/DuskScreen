@@ -14,3 +14,16 @@ dist/
 
 # Meson-generated wrap lockfile (scratch)
 /subprojects/.wraplock
+
+# ── AI-assistant & IDE artifacts — local only, never tracked ──
+# NOTE: docs/ is product documentation here, so ignore ONLY the assistant subtree.
+/docs/superpowers/
+.superpowers/
+.claude/
+.claude-mem/
+graphify-out/
+.idea/
+# Unanchored (match at any depth):
+CLAUDE.md
+AGENTS.md
+GEMINI.md
