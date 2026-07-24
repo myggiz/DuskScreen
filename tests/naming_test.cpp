@@ -2,7 +2,6 @@
 #include <QTemporaryDir>
 #include <QDir>
 #include <QFile>
-#include <QLocale>
 #include <QRegularExpression>
 #include <tools/screenshot.h>
 
@@ -76,7 +75,8 @@ TEST(GetName, TimestampShape) {
 }
 
 TEST(GetName, DateYearShape) {
-    QLocale::setDefault(QLocale::c());
+    // Locale is pinned to C for the whole suite in tests/main.cpp, so the year
+    // renders as ASCII digits and this ^shot\d{4}$ shape check is deterministic.
     QTemporaryDir dir; ASSERT_TRUE(dir.isValid());
     QString r = Screenshot::getName(opt(Screenshot::Date, false, 0, "yyyy"), "shot", QDir(dir.path()));
     EXPECT_TRUE(QRegularExpression("^shot\\d{4}$").match(r).hasMatch()) << r.toStdString();

@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QLocale>
 #include <QTimer>
 #include <gtest/gtest.h>
 
@@ -11,6 +12,11 @@ int main(int argc, char **argv)
 {
     qputenv("QT_QPA_PLATFORM", "offscreen");
     QApplication app(argc, argv);
+    // Pin the whole suite to the C locale so locale-formatted output (e.g. the
+    // year in Screenshot::getName's Date naming) is deterministic ASCII digits,
+    // independent of the host's default locale. Set once here rather than per-test
+    // so it never leaks between tests as order-dependent global state.
+    QLocale::setDefault(QLocale::c());
     ::testing::InitGoogleTest(&argc, argv);
 
     int rc = 0;

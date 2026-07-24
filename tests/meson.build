@@ -1,3 +1,8 @@
+# NOTE: duskscreen_core carries no qrc resources — they live in the app executable
+# (Qt strips resource objects out of static libs). The current tests need none. A
+# future test that constructs a resource-using widget must add the qrc to this
+# target's sources or call Q_INIT_RESOURCE explicitly, or it will link fine and hit
+# a missing resource at runtime.
 gtest_dep = dependency('gtest', required: get_option('tests'))
 
 if gtest_dep.found()
