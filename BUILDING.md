@@ -130,11 +130,22 @@ meson devenv -C build ./duskscreen        # ./duskscreen.exe on Windows
 meson devenv -C build
 ```
 
-`meson devenv` sets `PATH` (and friends) to whatever the build tree needs at
-runtime. On Windows, `meson.build` extends it with Qt's `bindir` so `Qt6*.dll`
-and the MinGW runtime resolve without a `windeployqt` step. This is the
-recommended way to run the app during development — IDE run configurations
-(CLion, VS Code Meson extension, Qt Creator) can point at the same command.
+`meson devenv` is cross-platform — it sets `PATH`, `LD_LIBRARY_PATH`,
+`PKG_CONFIG_PATH` and friends to whatever the build tree needs at runtime — and is
+the recommended dev-run command on every OS, so IDE run configurations (CLion, VS
+Code Meson extension, Qt Creator) can point at the same command everywhere.
+
+What it resolves differs by platform:
+
+- **Windows:** effectively required — there is no RPATH, so DLLs resolve only via
+  `PATH`. `meson.build` prepends Qt's `bindir` to the devenv `PATH` so `Qt6*.dll`
+  and the MinGW runtime resolve without a `windeployqt` bundle.
+- **Linux:** optional for this project. Qt 6 is a system install on the loader's
+  default search path, and both wrap subprojects (`SingleApplication`,
+  `UGlobalHotkey`) link **statically**, so the executable carries no build-tree
+  shared-library dependencies — `./build/duskscreen` runs directly. `meson devenv`
+  still works and is worth using for parity and IDE configs; it becomes necessary
+  only if a dependency is later built as a shared library.
 
 ## Testing
 
