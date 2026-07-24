@@ -99,8 +99,10 @@ meson test -C build-cov
 ninja -C build-cov coverage-html   # → build-cov/meson-logs/coveragereport/index.html
 # or: coverage-text (→ meson-logs/coverage.txt), coverage-xml (→ meson-logs/coverage.xml)
 ```
-Coverage is scoped to project source via `gcovr.cfg` (vendored subprojects and
-generated moc/ui/qrc files are excluded). If a combined
+Coverage is scoped to project source via `gcovr.cfg`: generated moc/ui/qrc files
+and vendored subprojects are excluded — **except** `uglobalhotkey/ukeysequence.{cpp,h}`,
+which we patch (Qt 6 port + `operator[]` bounds fix) and unit-test, so it counts as
+first-party rather than pristine-external. If a combined
 `ninja … coverage-html coverage-xml` invocation fails transiently under gcovr,
 run the coverage targets as separate invocations.
 
