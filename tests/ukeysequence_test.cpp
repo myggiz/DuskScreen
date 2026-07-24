@@ -24,3 +24,21 @@ TEST(UKeySequenceParse, SizeCountsEveryKey) {
     UKeySequence seq("Ctrl+Shift+A");
     EXPECT_EQ(seq.size(), static_cast<size_t>(3));
 }
+
+// Negative / edge cases — each pins a distinct parser failure mode against regression.
+
+TEST(UKeySequenceParse, DuplicateModifierDeduplicated) {
+    UKeySequence seq("Ctrl+Ctrl+A");
+    EXPECT_EQ(seq.size(), static_cast<size_t>(2));
+    EXPECT_EQ(seq.toString().toStdString(), "Ctrl+A");
+}
+
+TEST(UKeySequenceParse, CommaContainingTokenRejected) {
+    UKeySequence seq("Ctrl,A");
+    EXPECT_EQ(seq.size(), static_cast<size_t>(0));
+}
+
+TEST(UKeySequenceParse, EmptyStringYieldsNoKeys) {
+    UKeySequence seq("");
+    EXPECT_EQ(seq.size(), static_cast<size_t>(0));
+}
