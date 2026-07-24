@@ -4,18 +4,20 @@ url = https://github.com/ckaiser/UGlobalHotkey.git
 # "Merge pull request #1 from focusn1k/master"). ckaiser/UGlobalHotkey — not the
 # now-deleted falceeffect/UGlobalHotkey — is this project's actual ancestor: our
 # previously-vendored sources are byte-identical to this tree except for the Qt 6
-# port + operator[] fix, applied as a diff below (see PROVENANCE.md).
+# port + operator[] fix, applied as the two diffs below (see PROVENANCE.md).
 # A git tag/branch is mutable (can be force-repointed); a SHA is tamper-evident and
 # reproducible. No shallow "depth=": fetching an arbitrary SHA shallowly is not
 # reliably supported by all git servers (per the Meson wrap manual), so we full-clone.
 revision = 231b10144741b29037f0128bb7a1cd7176529f74
 directory = uglobalhotkey
 # patch_directory overlays the additive meson.build (upstream ships only qmake).
-# diff_files then applies our source modifications as a real patch — auditable
-# against the pinned SHA, and it fails configure loudly if upstream ever drifts.
-# Meson applies patch_directory first, then diff_files (both from packagefiles/).
+# diff_files then applies our source modifications as real patches — auditable
+# against the pinned SHA, and they fail configure loudly if upstream ever drifts.
+# Meson applies patch_directory first, then each diff_files entry in order (all
+# from packagefiles/). The two patches are kept separate by concern: the Qt 6 port
+# and the independent operator[] out-of-bounds bug fix (see PROVENANCE.md).
 patch_directory = uglobalhotkey
-diff_files = uglobalhotkey/0001-qt6-port.patch
+diff_files = uglobalhotkey/0001-qt6-port.patch, uglobalhotkey/0002-ukeysequence-operator-bounds-fix.patch
 
 [provide]
 uglobalhotkey = uglobalhotkey_dep
