@@ -19,6 +19,14 @@ if host_machine.system() == 'windows'
   # Qt 6 CMake sets these transitively; the Meson qt6 module does not.
   # Match qmake/Qt 6 CMake so Win32 macros resolve to the wide-char variants.
   add_project_arguments('-DUNICODE', '-D_UNICODE', language: 'cpp')
+
+  # Let `meson devenv -C build ./duskscreen.exe` find Qt/MinGW runtime DLLs
+  # without a windeployqt bundle. Devenv auto-adds project-built DLL dirs but
+  # not external ones, so surface Qt's bindir from its pkg-config metadata.
+  qt_bindir = qt6_dep.get_variable(pkgconfig: 'bindir', default_value: '')
+  if qt_bindir != ''
+    meson.add_devenv({'PATH': qt_bindir}, method: 'prepend')
+  endif
 endif
 
 singleapplication_dep = subproject('singleapplication').get_variable('singleapplication_dep')
