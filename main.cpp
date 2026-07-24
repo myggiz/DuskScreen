@@ -19,10 +19,8 @@
 #include <QApplication>
 #include <QByteArray>
 #include <QDataStream>
-#include <QLocale>
 #include <QStringList>
 
-#include <tools/os.h>
 #include "singleapplication.h"
 
 #include <duskscreenwindow.h>
@@ -50,17 +48,17 @@ int main(int argc, char *argv[])
         QByteArray payload;
         QDataStream out(&payload, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_6_0);
-        out << application.arguments();
+        out << QApplication::arguments();
         application.sendMessage(payload);
         return 0;
     }
 
-    application.setQuitOnLastWindowClosed(false);
+    QApplication::setQuitOnLastWindowClosed(false);
 
     DuskScreenWindow lightscreen;
 
-    if (application.arguments().size() > 1) {
-        lightscreen.executeArguments(application.arguments());
+    if (QApplication::arguments().size() > 1) {
+        lightscreen.executeArguments(QApplication::arguments());
     } else {
         lightscreen.show();
     }
@@ -78,5 +76,5 @@ int main(int argc, char *argv[])
         });
     QObject::connect(&lightscreen, &DuskScreenWindow::finished, &application, &SingleApplication::quit);
 
-    return application.exec();
+    return QApplication::exec();
 }
