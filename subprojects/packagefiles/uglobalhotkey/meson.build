@@ -1,8 +1,9 @@
 # Meson overlay for ckaiser/UGlobalHotkey (upstream ships qmake .pro/.pri only).
-# Copied into the fetched source tree at configure time via the wrap's patch_directory,
-# alongside the three Qt 6-ported source files in this same overlay. Full patch
-# breakdown lives one level up in subprojects/packagefiles/uglobalhotkey.PROVENANCE.md
-# (kept outside this patch_directory so it is not copied into the fetched build tree).
+# This is the ONLY file in the patch_directory overlay; it is copied into the fetched
+# source tree at configure time. The Qt 6 port + operator[] fix are applied separately
+# as a real patch via the wrap's diff_files (0001-qt6-port.patch), after this overlay.
+# Full patch breakdown lives one level up in
+# subprojects/packagefiles/uglobalhotkey.PROVENANCE.md.
 # Upstream ckaiser/UGlobalHotkey publishes no tags or releases, so there is no
 # semver to adopt. The version encodes the pinned commit from uglobalhotkey.wrap
 # (revision 231b10144741b29037f0128bb7a1cd7176529f74) so `meson setup` reports the
@@ -21,7 +22,7 @@ extra_args = ['-DUGLOBALHOTKEY_NOEXPORT']
 
 if host_machine.system() == 'linux'
   deps += [cc.find_library('xcb'), cc.find_library('xcb-keysyms')]
-  # NOTE: no gui-private needed — the overlaid uglobalhotkeys.cpp uses the public
+  # NOTE: no gui-private needed — the patched uglobalhotkeys.cpp uses the public
   # QX11Application native interface instead of the private QPA
   # platformNativeInterface() API.
 elif host_machine.system() == 'windows'

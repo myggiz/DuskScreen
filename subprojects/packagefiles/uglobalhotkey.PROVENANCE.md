@@ -16,17 +16,27 @@ by **falceeffect** — but `falceeffect/UGlobalHotkey` **no longer exists (404)*
 style changes, better Windows support and whatever else I might need for Lightscreen"
 per the vendored `README.md`. Diffing DuskScreen's previously-vendored copy against
 `ckaiser/UGlobalHotkey@231b101` shows the trees are **byte-identical** except for the
-three Qt 6 port files carried in this overlay — so ckaiser is the confirmed ancestor
+changes carried in `0001-qt6-port.patch` — so ckaiser is the confirmed ancestor
 and the correct, still-live wrap source.
 
-## Local patches (this overlay's `patch_directory`)
+## Local changes
 
-Meson copies every file in `subprojects/packagefiles/uglobalhotkey/` over the fetched
-tree at configure time. The overlay carries:
+Two mechanisms, both driven from `subprojects/packagefiles/uglobalhotkey/`. Meson
+applies the `patch_directory` overlay first, then the `diff_files` patch.
 
-- **`meson.build`** — Meson build (upstream ships only qmake `.pro`/`.pri`).
-- **`uglobalhotkeys.h`**, **`uglobalhotkeys.cpp`**, **`ukeysequence.cpp`** — the Qt 6
-  port. Exactly these changes vs upstream `231b101`:
+### 1. Additive overlay (`patch_directory`)
+
+- **`meson.build`** — Meson build (upstream ships only qmake `.pro`/`.pri`). Purely
+  additive; upstream has no equivalent, so it is overlaid rather than patched.
+
+### 2. Source patch (`diff_files = uglobalhotkey/0001-qt6-port.patch`)
+
+A real `git diff` against upstream `231b101` — auditable, and it makes `meson setup`
+**fail loudly** if upstream ever drifts (a `git apply` failure aborts configure),
+instead of silently masking changes the way a full-file overlay would. It touches
+`uglobalhotkeys.h`, `uglobalhotkeys.cpp`, `ukeysequence.cpp`, `ukeysequence.h`:
+
+- **Qt 6 port:**
   - Native-event result params `long *result` → `qintptr *result`
     (Qt 6 `nativeEvent`/`nativeEventFilter` signature change).
   - X11 connection lookup moved from the private QPA API
@@ -39,13 +49,18 @@ tree at configure time. The overlay carries:
     non-X11 early-return leaves no dangling frees.
   - `addKey((Qt::Key) seq[0])` → `addKey(seq[0].key())`
     (Qt 6 `QKeySequence::operator[]` now returns `QKeyCombination`).
+- **Bug fix (`ukeysequence.h`):** `UKeySequence::operator[]` guard
+  `if ((int)n > mKeys.size())` → `if (n >= static_cast<size_t>(mKeys.size()))`.
+  The upstream `>` is off-by-one: at `n == size()` it fell through and read
+  `mKeys[size()]` out of bounds (SIGABRT under Qt's debug assertions). Covered by
+  the `UKeySequenceIndex.OutOfRangeReturnsUnknown` regression test in `tests/`.
 
-The upstream-identical files (`hotkeymap.h`, `uglobal.h`, `ukeysequence.h`,
-`README.md`) are **not** overlaid — they come straight from the fetched tree.
+The upstream-identical files (`hotkeymap.h`, `uglobal.h`, `README.md`) come straight
+from the fetched tree.
 
 To audit: `git clone https://github.com/ckaiser/UGlobalHotkey && cd UGlobalHotkey &&
-git checkout 231b101` then diff its `uglobalhotkeys.{h,cpp}` / `ukeysequence.cpp`
-against this overlay.
+git checkout 231b101` then `git apply .../0001-qt6-port.patch` and inspect, or diff
+the fetched `subprojects/uglobalhotkey/` tree after `meson setup`.
 
 ## Facts
 

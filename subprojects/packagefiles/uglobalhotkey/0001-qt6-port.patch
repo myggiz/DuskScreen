@@ -1,0 +1,119 @@
+diff --git a/uglobalhotkeys.cpp b/uglobalhotkeys.cpp
+index 789fa40..b479ab9 100644
+--- a/uglobalhotkeys.cpp
++++ b/uglobalhotkeys.cpp
+@@ -3,7 +3,7 @@
+ #include <windows.h>
+ #elif defined(Q_OS_LINUX)
+ #include <QWindow>
+-#include <qpa/qplatformnativeinterface.h>
++#include <QGuiApplication>
+ #include <QApplication>
+ #endif
+ 
+@@ -17,9 +17,9 @@ UGlobalHotkeys::UGlobalHotkeys(QWidget *parent)
+ {
+ #if defined(Q_OS_LINUX)
+     qApp->installNativeEventFilter(this);
+-    QWindow wndw;
+-    void *v = qApp->platformNativeInterface()->nativeResourceForWindow("connection", &wndw);
+-    X11Connection = (xcb_connection_t *)v;
++    auto *x11app = qApp->nativeInterface<QNativeInterface::QX11Application>();
++    X11Connection = x11app ? x11app->connection() : nullptr;
++    if (!X11Connection) return;   // non-X11 (e.g. Wayland) — global hotkeys are a sub-project #2 concern
+     X11Wid = xcb_setup_roots_iterator(xcb_get_setup(X11Connection)).data->root;
+     X11KeySymbs = xcb_key_symbols_alloc(X11Connection);
+ #endif
+@@ -146,7 +146,7 @@ UGlobalHotkeys::~UGlobalHotkeys()
+         UnregisterHotKey((HWND)winId(), *i);
+     }
+ #elif defined(Q_OS_LINUX)
+-    xcb_key_symbols_free(X11KeySymbs);
++    if (X11KeySymbs) xcb_key_symbols_free(X11KeySymbs);
+ #endif
+ }
+ 
+@@ -158,7 +158,7 @@ void UGlobalHotkeys::onHotkeyPressed(size_t id)
+ #endif
+ 
+ #if defined(Q_OS_WIN)
+-bool UGlobalHotkeys::winEvent(MSG *message, long *result)
++bool UGlobalHotkeys::winEvent(MSG *message, qintptr *result)
+ {
+     Q_UNUSED(result);
+     if (message->message == WM_HOTKEY) {
+@@ -170,7 +170,7 @@ bool UGlobalHotkeys::winEvent(MSG *message, long *result)
+ }
+ 
+ bool UGlobalHotkeys::nativeEvent(const QByteArray &eventType,
+-                                 void *message, long *result)
++                                 void *message, qintptr *result)
+ {
+     Q_UNUSED(eventType);
+     return winEvent((MSG *)message, result);
+@@ -178,7 +178,7 @@ bool UGlobalHotkeys::nativeEvent(const QByteArray &eventType,
+ 
+ #elif defined(Q_OS_LINUX)
+ 
+-bool UGlobalHotkeys::nativeEventFilter(const QByteArray &eventType, void *message, long *result)
++bool UGlobalHotkeys::nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result)
+ {
+     Q_UNUSED(eventType);
+     Q_UNUSED(result);
+diff --git a/uglobalhotkeys.h b/uglobalhotkeys.h
+index 48b3681..b6fb7c2 100644
+--- a/uglobalhotkeys.h
++++ b/uglobalhotkeys.h
+@@ -42,10 +42,10 @@ public:
+ 
+ protected:
+ #if defined(Q_OS_WIN)
+-    bool winEvent(MSG *message, long *result);
+-    bool nativeEvent(const QByteArray &eventType, void *message, long *result);
++    bool winEvent(MSG *message, qintptr *result);
++    bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result);
+ #elif defined(Q_OS_LINUX)
+-    bool nativeEventFilter(const QByteArray &eventType, void *message, long *result);
++    bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result);
+     bool linuxEvent(xcb_generic_event_t *message);
+     void regLinuxHotkey(const UKeySequence &keySeq, size_t id);
+     void unregLinuxHotkey(size_t id);
+@@ -63,9 +63,9 @@ private:
+     QSet<size_t> Registered;
+ #elif defined(Q_OS_LINUX)
+     QHash<size_t, UHotkeyData> Registered;
+-    xcb_connection_t *X11Connection;
+-    xcb_window_t X11Wid;
+-    xcb_key_symbols_t *X11KeySymbs;
++    xcb_connection_t *X11Connection = nullptr;
++    xcb_window_t X11Wid = 0;
++    xcb_key_symbols_t *X11KeySymbs = nullptr;
+ #elif defined(Q_OS_MAC)
+     QHash<size_t, EventHotKeyRef> HotkeyRefs;
+ #endif
+diff --git a/ukeysequence.cpp b/ukeysequence.cpp
+index a05fc93..3c8e67b 100644
+--- a/ukeysequence.cpp
++++ b/ukeysequence.cpp
+@@ -106,7 +106,7 @@ void UKeySequence::addKey(const QString &key)
+         qWarning() << "Wrong key";
+         return;
+     }
+-    addKey((Qt::Key) seq[0]);
++    addKey(seq[0].key());
+ }
+ 
+ void UKeySequence::addKey(Qt::Key key)
+diff --git a/ukeysequence.h b/ukeysequence.h
+index 725ec5a..f2c5649 100644
+--- a/ukeysequence.h
++++ b/ukeysequence.h
+@@ -29,7 +29,7 @@ public:
+     }
+     inline Qt::Key operator [](size_t n) const
+     {
+-        if ((int)n > mKeys.size()) {
++        if (n >= static_cast<size_t>(mKeys.size())) {
+             return Qt::Key_unknown;
+         }
+ 
