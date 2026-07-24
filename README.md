@@ -70,8 +70,11 @@ prefix, then point Meson at it via `PKG_CONFIG_PATH`/`CMAKE_PREFIX_PATH`. CI use
 
 ## Testing & coverage
 
-DuskScreen has a GoogleTest unit suite (needs system `gtest`; on Arch: `pacman -S gtest`).
-Tests run headless and hit no network.
+DuskScreen has a GoogleTest unit suite. gtest is sourced via a Meson wrap
+(`subprojects/gtest.wrap`), so no host install is required — `meson setup` uses a
+system `gtest` if one is present, otherwise fetches it at configure time. Tests run
+headless and hit no network. (`-Dtests=disabled` builds the app without gtest;
+CI should use `-Dtests=enabled` so a missing suite is an error, not a silent skip.)
 
 ```bash
 meson setup build
