@@ -6,8 +6,17 @@
 gtest_dep = dependency('gtest', required: get_option('tests'))
 
 if gtest_dep.found()
+  # One entry per line so adding a test suite is a clean one-line diff.
+  test_sources = [
+    'main.cpp',
+    'ukeysequence_test.cpp',
+    'naming_test.cpp',
+    'screenshot_test.cpp',
+    'os_x11guard_test.cpp',
+  ]
+
   duskscreen_tests = executable('duskscreen_tests',
-    sources: ['main.cpp', 'ukeysequence_test.cpp', 'naming_test.cpp', 'screenshot_test.cpp', 'os_x11guard_test.cpp'],
+    sources: test_sources,
     link_with: duskscreen_core,
     dependencies: [qt6_dep, gtest_dep, uglobalhotkey_dep],
     include_directories: include_directories('..'))

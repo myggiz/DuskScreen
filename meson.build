@@ -47,12 +47,19 @@ moc = qt6.compile_moc(headers: moc_headers, dependencies: qt6_dep,
 ui  = qt6.compile_ui(sources: ui_files)
 qrc = qt6.compile_resources(sources: 'duskscreen.qrc')
 
+# One entry per line so adding/removing a source is a clean one-line diff.
 core_sources = [
   'duskscreenwindow.cpp',
-  'dialogs/areadialog.cpp', 'dialogs/namingdialog.cpp',
-  'dialogs/optionsdialog.cpp', 'dialogs/updaterdialog.cpp',
-  'tools/os.cpp', 'tools/screenshot.cpp', 'tools/screenshotmanager.cpp',
-  'tools/windowpicker.cpp', 'updater/updater.cpp', 'widgets/hotkeywidget.cpp',
+  'dialogs/areadialog.cpp',
+  'dialogs/namingdialog.cpp',
+  'dialogs/optionsdialog.cpp',
+  'dialogs/updaterdialog.cpp',
+  'tools/os.cpp',
+  'tools/screenshot.cpp',
+  'tools/screenshotmanager.cpp',
+  'tools/windowpicker.cpp',
+  'updater/updater.cpp',
+  'widgets/hotkeywidget.cpp',
 ]
 
 app_deps = [qt6_dep, singleapplication_dep, uglobalhotkey_dep]
