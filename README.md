@@ -68,6 +68,28 @@ Use [`aqtinstall`](https://github.com/miurahr/aqtinstall) to fetch a prebuilt Qt
 prefix, then point Meson at it via `PKG_CONFIG_PATH`/`CMAKE_PREFIX_PATH`. CI uses
 `jurplel/install-qt-action`.
 
+## Testing & coverage
+
+DuskScreen has a GoogleTest unit suite (needs system `gtest`; on Arch: `pacman -S gtest`).
+Tests run headless and hit no network.
+
+```bash
+meson setup build
+meson test -C build            # runs the unit suite
+```
+
+Coverage (needs `gcovr`):
+```bash
+meson setup build-cov -Db_coverage=true --buildtype=debug
+meson test -C build-cov
+ninja -C build-cov coverage-html   # → build-cov/meson-logs/coveragereport/index.html
+# or: coverage-text (→ meson-logs/coverage.txt), coverage-xml (→ meson-logs/coverage.xml)
+```
+Coverage is scoped to project source via `gcovr.cfg` (vendored subprojects and
+generated moc/ui/qrc files are excluded). If a combined
+`ninja … coverage-html coverage-xml` invocation fails transiently under gcovr,
+run the coverage targets as separate invocations.
+
 ## License
 
 GPL v2-or-later, unchanged from upstream — see [LICENSE](LICENSE).
