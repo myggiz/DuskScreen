@@ -198,11 +198,11 @@ Temporary Items
 
 ### Meson ###
 # subproject directories: ignore fetched/downloaded subprojects, but keep the
-# wrap files, the packagefiles overlay, and the vendored (in-tree) libraries.
+# wrap files and the packagefiles overlay. Both singleapplication and uglobalhotkey
+# are now wrap-git subprojects fetched into /subprojects/<name>/ at configure time.
 /subprojects/*
 !/subprojects/*.wrap
 !/subprojects/packagefiles/
-!/subprojects/uglobalhotkey/
 
 # Meson Directories
 meson-logs

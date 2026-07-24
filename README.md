@@ -16,8 +16,12 @@ ported to **Qt 6** and slimmed down to a focused capture-to-disk tool.
   screenshot preview dialog, and the SQLite history — captures go straight to disk.
 - **Bug fixes** surfaced by the port, e.g. *Go to Folder* now reveals the file in
   Explorer again instead of opening it in an image viewer.
-- **Bundled dependencies** (`SingleApplication`, `UGlobalHotkey`) are vendored in-tree
-  and patched for Qt 6, so the repo clones and builds with no submodule setup.
+- **Dependencies** (`SingleApplication`, `UGlobalHotkey`) are Meson `wrap-git`
+  subprojects, SHA-pinned to their upstreams with the Qt 6 patches carried as a
+  `packagefiles` overlay. `meson setup` fetches them automatically — no `git submodule`
+  steps — so the repo builds with a single configure (network access is needed the
+  first time you configure). See [PROVENANCE.md](PROVENANCE.md) for the full lineage
+  graph, pinned revisions, and licenses.
 
 ## Antivirus warnings
 

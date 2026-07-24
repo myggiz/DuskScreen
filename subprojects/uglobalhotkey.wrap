@@ -1,0 +1,16 @@
+[wrap-git]
+url = https://github.com/ckaiser/UGlobalHotkey.git
+# Pinned to the immutable commit SHA of ckaiser/UGlobalHotkey HEAD (tip of master,
+# "Merge pull request #1 from focusn1k/master"). ckaiser/UGlobalHotkey — not the
+# now-deleted falceeffect/UGlobalHotkey — is this project's actual ancestor: our
+# previously-vendored sources are byte-identical to this tree except for the three
+# Qt 6 port patches carried in the packagefiles overlay (see PROVENANCE.md).
+# A git tag/branch is mutable (can be force-repointed); a SHA is tamper-evident and
+# reproducible. No shallow "depth=": fetching an arbitrary SHA shallowly is not
+# reliably supported by all git servers (per the Meson wrap manual), so we full-clone.
+revision = 231b10144741b29037f0128bb7a1cd7176529f74
+directory = uglobalhotkey
+patch_directory = uglobalhotkey
+
+[provide]
+uglobalhotkey = uglobalhotkey_dep
