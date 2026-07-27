@@ -63,9 +63,9 @@ private:
     QSet<size_t> Registered;
 #elif defined(Q_OS_LINUX)
     QHash<size_t, UHotkeyData> Registered;
-    xcb_connection_t *X11Connection;
-    xcb_window_t X11Wid;
-    xcb_key_symbols_t *X11KeySymbs;
+    xcb_connection_t *X11Connection = nullptr;
+    xcb_window_t X11Wid = 0;
+    xcb_key_symbols_t *X11KeySymbs = nullptr;
 #elif defined(Q_OS_MAC)
     QHash<size_t, EventHotKeyRef> HotkeyRefs;
 #endif
