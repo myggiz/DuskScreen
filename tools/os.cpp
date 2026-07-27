@@ -22,6 +22,7 @@
 #include <QDialog>
 #include <QDir>
 #include <QGraphicsDropShadowEffect>
+#include <QGuiApplication>
 #include <QIcon>
 #include <QImage>
 #include <QLibrary>
@@ -30,6 +31,7 @@
 #include <QPixmap>
 #include <QPointer>
 #include <QProcess>
+#include <QScreen>
 #include <QSettings>
 #include <QTextEdit>
 #include <QTimeLine>
@@ -50,7 +52,7 @@
         #define SM_CXPADDEDBORDER 92
     #endif
 #elif defined(Q_OS_LINUX)
-    #include <QX11Info>
+    #include <QtGui/qguiapplication_platform.h>
     #include <X11/X.h>
     #include <X11/Xlib.h>
     #include <X11/Xutil.h>
@@ -303,7 +305,7 @@ QPixmap os::grabWindow(WId winId)
 
     return pixmap;
 #else
-    return QPixmap::grabWindow(winId);
+    return QGuiApplication::primaryScreen()->grabWindow(winId);
 #endif
 }
 
@@ -377,6 +379,16 @@ QIcon os::icon(const QString &name, QColor backgroundColor)
 }
 
 #ifdef Q_OS_LINUX
+// X11 display handle for the current QGuiApplication, or nullptr when the
+// platform plugin isn't xcb (e.g. Wayland). The window-picker / active-window
+// helpers below are X11-only, mirroring their pre-Qt6 behavior (which used
+// the now-removed Qt5 X11Extras display accessor).
+static Display *x11Display()
+{
+    auto *x11app = qGuiApp->nativeInterface<QNativeInterface::QX11Application>();
+    return x11app ? x11app->display() : nullptr;
+}
+
 // Taken from KSnapshot. Oh KDE, what would I do without you :D
 Window os::findRealWindow(Window w, int depth)
 {
@@ -384,13 +396,17 @@ Window os::findRealWindow(Window w, int depth)
         return None;
     }
 
-    static Atom wm_state = XInternAtom(QX11Info::display(), "WM_STATE", False);
+    if (!x11Display()) {
+        return None;  // non-X11 (e.g. Wayland): no X11 window tree to query
+    }
+
+    static Atom wm_state = XInternAtom(x11Display(), "WM_STATE", False);
     Atom type;
     int format;
     unsigned long nitems, after;
     unsigned char *prop;
 
-    if (XGetWindowProperty(QX11Info::display(), w, wm_state, 0, 0, False, AnyPropertyType,
+    if (XGetWindowProperty(x11Display(), w, wm_state, 0, 0, False, AnyPropertyType,
                            &type, &format, &nitems, &after, &prop) == Success) {
         if (prop != NULL) {
             XFree(prop);
@@ -406,7 +422,7 @@ Window os::findRealWindow(Window w, int depth)
     unsigned int nchildren;
     Window ret = None;
 
-    if (XQueryTree(QX11Info::display(), w, &root, &parent, &children, &nchildren) != 0) {
+    if (XQueryTree(x11Display(), w, &root, &parent, &children, &nchildren) != 0) {
         for (unsigned int i = 0;
                 i < nchildren && ret == None;
                 ++i) {
@@ -427,12 +443,19 @@ Window os::windowUnderCursor(bool includeDecorations)
     Window child;
     uint mask;
     int rootX, rootY, winX, winY;
+    Display *display = x11Display();
 
-    XQueryPointer(QX11Info::display(), QX11Info::appRootWindow(), &root, &child,
+    if (!display) {
+        return None;  // non-X11 (e.g. Wayland): no pointer/root window to query
+    }
+
+    Window rootWindow = DefaultRootWindow(display);
+
+    XQueryPointer(display, rootWindow, &root, &child,
                   &rootX, &rootY, &winX, &winY, &mask);
 
     if (child == None) {
-        child = QX11Info::appRootWindow();
+        child = rootWindow;
     }
 
     if (!includeDecorations) {

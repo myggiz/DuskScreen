@@ -20,6 +20,7 @@
 #include <QClipboard>
 #include <QDateTime>
 #include <QFileDialog>
+#include <QGuiApplication>
 #include <QPainter>
 #include <QPixmap>
 #include <QProcess>
@@ -40,7 +41,7 @@
 #endif
 
 #ifdef Q_OS_LINUX
-    #include <QX11Info>
+    #include <QtGui/qguiapplication_platform.h>
     #include <X11/X.h>
     #include <X11/Xlib.h>
     #undef Success
@@ -315,12 +316,17 @@ void Screenshot::activeWindow()
 #endif
 
 #if defined(Q_OS_LINUX)
-    Window focus;
-    int revert;
+    auto *x11app = qGuiApp->nativeInterface<QNativeInterface::QX11Application>();
 
-    XGetInputFocus(QX11Info::display(), &focus, &revert);
+    if (x11app) {
+        Window focus;
+        int revert;
 
-    mPixmap = QPixmap::grabWindow(focus);
+        XGetInputFocus(x11app->display(), &focus, &revert);
+
+        mPixmap = QGuiApplication::primaryScreen()->grabWindow(focus);
+    }
+    // else: non-X11 (Wayland) — capture path is a separate future effort; leave mPixmap empty.
 #endif
 }
 
