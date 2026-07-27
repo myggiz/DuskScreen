@@ -50,7 +50,8 @@
 Screenshot::Screenshot(QObject *parent, Screenshot::Options options):
     QObject(parent),
     mOptions(options),
-    mPixmapDelay(false)
+    mPixmapDelay(false),
+    mCancelled(false)
 {
     if (mOptions.format == Screenshot::PNG) {
         mOptions.quality = 80;
@@ -283,11 +284,23 @@ void Screenshot::take()
         return;
     }
 
-    if (mPixmap.isNull()) {
-        confirm(false);
-    } else {
+    if (!mPixmap.isNull()) {
         confirmation();
+        return;
     }
+
+    if (mCancelled) {
+        confirm(false);
+        return;
+    }
+
+    // The grab produced nothing and the user didn't cancel: the capture failed
+    // (the compositor refused it, the target window went away). Reporting that
+    // as Cancel sends it down the one path that stays deliberately quiet, so
+    // the user is told nothing at all.
+    mOptions.result = Screenshot::Failure;
+    emit finished();
+    emit cleanup();
 }
 
 void Screenshot::refresh()
@@ -441,6 +454,7 @@ void Screenshot::selectedArea()
     if (result == QDialog::Accepted) {
         mPixmap = mPixmap.copy(selector.resultRect());
     } else {
+        mCancelled = true;
         mPixmap = QPixmap();
     }
 }
