@@ -33,7 +33,7 @@ Every release publishes **SHA-256 checksums** so you can verify you have the exa
 published build:
 
 ```powershell
-Get-FileHash .\DuskScreen-1.0.3-win64.zip -Algorithm SHA256
+Get-FileHash .\DuskScreen-1.0.4-win64.zip -Algorithm SHA256
 ```
 
 The source is all here, and the binaries are never packed or obfuscated. See
