@@ -505,7 +505,7 @@ void AreaDialog::paintEvent(QPaintEvent *e)
         QRect helpRect = QGuiApplication::primaryScreen()->geometry();
         QString helpTxt = tr("Use your mouse to draw a rectangle to capture. Press any key or right click to exit.\nType \"100x100\" or similar and press enter for precise sizing. Ctrl+M toggles magnifier.");
 
-        helpRect.setHeight(qRound((float)(helpRect.height() / 10))); // We get a decently sized rect where the text should be drawn (centered)
+        helpRect.setHeight(qRound(helpRect.height() / 10.0f)); // We get a decently sized rect where the text should be drawn (centered)
 
         // We draw the white contrasting background for the text, using the same text and options to get the boundingRect that the text will have.
         painter.setPen(QPen(Qt::white));
