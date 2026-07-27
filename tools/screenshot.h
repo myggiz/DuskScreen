@@ -128,6 +128,9 @@ private:
     Screenshot::Options mOptions;
     QPixmap mPixmap;
     bool mPixmapDelay;
+    // Set only when the user backs out of the area selector, so that a null
+    // pixmap from a *failed* grab isn't misreported as a cancellation.
+    bool mCancelled;
 
 };
 
