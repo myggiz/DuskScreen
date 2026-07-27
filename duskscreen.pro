@@ -61,7 +61,6 @@ windows {
 }
 
 unix:LIBS += -lX11
-unix:QT += x11extras
 
 include (version.pri)
 
