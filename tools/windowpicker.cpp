@@ -33,11 +33,6 @@
     #include <QImage>
     #include <windows.h>
 
-    #ifdef _WIN64
-        #define GCL_HICON GCLP_HICON
-        #define GCL_HICONSM GCLP_HICONSM
-    #endif
-
 #elif defined(Q_OS_LINUX)
     #include <QtGui/qguiapplication_platform.h>
     #include <X11/X.h>
@@ -175,7 +170,11 @@ void WindowPicker::mouseMoveEvent(QMouseEvent *event)
     ///
 
     // Retrieving the application icon
-    icon = (HICON)::GetClassLong((HWND)mCurrentWindow, GCL_HICON);
+    // GetClassLongPtr is the correct API for handle-sized class data; on 32-bit
+    // it is defined to GetClassLong. Not a live bug (the HICONs Windows hands
+    // out here fit in 32 bits), but the previous GetClassLong + GCLP_HICON
+    // pairing was only correct by accident.
+    icon = (HICON)::GetClassLongPtr((HWND)mCurrentWindow, GCLP_HICON);
 
     if (icon != NULL) {
         mWindowIcon->setPixmap(QPixmap::fromImage(QImage::fromHICON(icon)));
