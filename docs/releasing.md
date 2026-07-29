@@ -36,8 +36,14 @@ Users can decline a specific version ("Skip This Version", stored as
 
 1. Bump `VERSION` in `version.pri`, and the filename in the README's checksum
    example.
-2. Build release binaries, run `windeployqt`, prune, and zip as
-   `DuskScreen-<version>-win64.zip`.
+2. **Build clean** — `make clean` or a fresh build directory — then run
+   `windeployqt`, prune, and zip as `DuskScreen-<version>-win64.zip`.
+
+   The clean build is not optional. `VERSION` reaches the code as the
+   `-DAPP_VERSION` compiler flag, and qmake does not treat a changed define as
+   a reason to recompile: an incremental build after a version bump leaves
+   `main.cpp` untouched, producing a binary that reports the *previous* version
+   in About and compares against it when checking for updates.
 3. Create a GitHub release tagged **`v<version>`** — the leading `v` matters,
    as does the tag parsing as a version number.
 4. Attach the zip and publish the SHA-256 of both the zip and `duskscreen.exe`
