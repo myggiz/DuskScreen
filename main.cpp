@@ -18,6 +18,7 @@
  */
 #include <QApplication>
 #include <QLocale>
+#include <QTimer>
 
 #include <tools/os.h>
 #include "tools/SingleApplication/singleapplication.h"
@@ -41,7 +42,16 @@ int main(int argc, char *argv[])
     DuskScreenWindow lightscreen;
 
     if (application.arguments().size() > 1) {
-        lightscreen.executeArguments(application.arguments());
+        // Deferred until exec() is running. QCoreApplication::quit() does nothing
+        // when there is no event loop, so dispatching here directly meant that
+        // "--quit" on an instance that wasn't already running *started* the
+        // application instead of stopping it. The forwarded-argument path from a
+        // second instance always ran inside the loop and was unaffected.
+        const QStringList arguments = application.arguments();
+
+        QTimer::singleShot(0, &lightscreen, [&lightscreen, arguments] {
+            lightscreen.executeArguments(arguments);
+        });
     } else {
         lightscreen.show();
     }
