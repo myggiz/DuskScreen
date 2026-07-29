@@ -135,6 +135,10 @@ void OptionsDialog::importSettings()
                              QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
                              tr("DuskScreen Settings (*.ini)"));
 
+    if (importFileName.isEmpty()) {
+        return;    // Cancelled — don't fall through to saveSettings().
+    }
+
     QSettings importedSettings(importFileName, QSettings::IniFormat);
 
     saveSettings();
@@ -209,7 +213,7 @@ void OptionsDialog::loadSettings()
         ui.optiPngLabel->setText("optipng.exe not found");
     }
 #elif defined(Q_OS_LINUX)
-    if (!QProcess::startDetached("optipng")) {
+    if (QStandardPaths::findExecutable("optipng").isEmpty()) {
         ui.optiPngCheckBox->setChecked(false);
         ui.optiPngCheckBox->setEnabled(false);
         ui.optiPngLabel->setText(tr("Install 'OptiPNG'"));
