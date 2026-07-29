@@ -271,33 +271,39 @@ QPixmap os::grabWindow(WId winId)
     // the window DC method has the disadvantage that it does not show Aero glass transparency,
     // so we'll avoid it for the screenshots that don't need it.
 
-    HDC hdcMem;
-    HBITMAP hbmCapture;
+    // The source DC has to outlive the branch below so it can be released:
+    // GetDC and GetWindowDC both hand out a DC the caller owns, and leaking one
+    // per capture exhausts the process GDI quota over a long session.
+    HDC  hdcSource;
+    HWND hwndSource;
+    int  srcX = 0;
+    int  srcY = 0;
 
     if (EqualRect(&rcScreen, &rcResult)) {
         // Grabbing the window from the Screen DC.
-        HDC hdcScreen = GetDC(NULL);
+        hdcSource  = GetDC(NULL);
+        hwndSource = NULL;
+        srcX       = rcWindow.left;
+        srcY       = rcWindow.top;
 
         BringWindowToTop(hwndId);
-
-        hdcMem = CreateCompatibleDC(hdcScreen);
-        hbmCapture = CreateCompatibleBitmap(hdcScreen, width, height);
-        SelectObject(hdcMem, hbmCapture);
-
-        BitBlt(hdcMem, 0, 0, width, height, hdcScreen, rcWindow.left, rcWindow.top, SRCCOPY);
     } else {
         // Grabbing the window by its own DC
-        HDC hdcWindow = GetWindowDC(hwndId);
-
-        hdcMem = CreateCompatibleDC(hdcWindow);
-        hbmCapture = CreateCompatibleBitmap(hdcWindow, width, height);
-        SelectObject(hdcMem, hbmCapture);
-
-        BitBlt(hdcMem, 0, 0, width, height, hdcWindow, 0, 0, SRCCOPY);
+        hdcSource  = GetWindowDC(hwndId);
+        hwndSource = hwndId;
     }
 
-    ReleaseDC(hwndId, hdcMem);
+    HDC     hdcMem     = CreateCompatibleDC(hdcSource);
+    HBITMAP hbmCapture = CreateCompatibleBitmap(hdcSource, width, height);
+
+    HGDIOBJ hbmOld = SelectObject(hdcMem, hbmCapture);
+    BitBlt(hdcMem, 0, 0, width, height, hdcSource, srcX, srcY, SRCCOPY);
+    SelectObject(hdcMem, hbmOld);
+
+    // A memory DC is DeleteDC-only; the previous ReleaseDC(hwndId, hdcMem) here
+    // was a no-op that left the real source DC leaking.
     DeleteDC(hdcMem);
+    ReleaseDC(hwndSource, hdcSource);
 
     pixmap = QPixmap::fromImage(QImage::fromHBITMAP(hbmCapture));
 
