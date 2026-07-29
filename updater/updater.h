@@ -29,7 +29,10 @@ public:
     Updater(QObject *parent = 0);
 
 signals:
-    void done(bool result);
+    // version and url are only meaningful when available is true; both are
+    // empty on "no update" and on any failure, which are reported identically
+    // because neither is worth interrupting the user for.
+    void done(bool available, const QString &version, const QString &url);
 
 public slots:
     void check();

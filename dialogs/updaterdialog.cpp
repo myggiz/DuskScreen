@@ -44,10 +44,10 @@ UpdaterDialog::UpdaterDialog(QWidget *parent) :
     setBar(bar);
 }
 
-void UpdaterDialog::updateDone(bool result)
+void UpdaterDialog::updateDone(bool available, const QString &version, const QString &url)
 {
-    if (result) {
-        setLabelText(tr("There's a new version available,<br> please see <a href=\"%1\">the DuskScreen website</a>.").arg(QString(APP_URL "/whatsnew/") + qApp->applicationVersion()));
+    if (available) {
+        setLabelText(tr("DuskScreen %1 is available.<br><a href=\"%2\">View the release</a>.").arg(version, url));
     } else {
         setLabelText(tr("No new versions available."));
     }
