@@ -73,7 +73,6 @@ DuskScreenWindow::DuskScreenWindow(QWidget *parent) :
     mReviveMain(false),
     mWasVisible(true),
     mLastMessage(0),
-    mLastMode(Screenshot::None),
     mLastScreenshot(),
     mHasTaskbarButton(false)
 {
@@ -392,7 +391,7 @@ void DuskScreenWindow::restoreNotification()
     updateStatus();
 }
 
-void DuskScreenWindow::screenshotAction(Screenshot::Mode mode)
+void DuskScreenWindow::screenshotAction(Screenshot::Mode mode, bool delayed)
 {
     int delayms = -1;
 
@@ -414,26 +413,22 @@ void DuskScreenWindow::screenshotAction(Screenshot::Mode mode)
 #endif
     }
 
-    // Screenshot delay
+    // Screenshot delay. The 400ms is unconditional: it gives hide() time to take
+    // effect before the grab, whether or not the user configured a delay.
     delayms = settings()->value("options/delay", 0).toInt();
     delayms = delayms * 1000; // Converting the delay to milliseconds.
 
     delayms += 400;
 
-    // The delayed functions works using the static variable lastMode
-    // which keeps the argument so a QTimer can call this function again.
-    if (delayms > 0) {
-        if (mLastMode == Screenshot::None) {
-            mLastMode = mode;
-
-            QTimer::singleShot(delayms, this, [&] {
-                screenshotAction(mLastMode);
-            });
-            return;
-        } else {
-            mode = mLastMode;
-            mLastMode = Screenshot::None;
-        }
+    // Each request carries its own mode through the timer by value. Routing it
+    // through a shared member instead let a second request within the delay
+    // window run with the first one's mode, and left the pending timer to
+    // re-enter with Screenshot::None and reschedule itself forever.
+    if (!delayed) {
+        QTimer::singleShot(delayms, this, [this, mode] {
+            screenshotAction(mode, true);
+        });
+        return;
     }
 
     static Screenshot::Options options;
