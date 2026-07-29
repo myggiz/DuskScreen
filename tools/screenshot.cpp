@@ -54,7 +54,11 @@ Screenshot::Screenshot(QObject *parent, Screenshot::Options options):
     mCancelled(false)
 {
     if (mOptions.format == Screenshot::PNG) {
-        mOptions.quality = 80;
+        // For PNG the "quality" argument is a compression level, not a quality
+        // level, and -1 asks the writer for its default. Forcing 80 produced
+        // barely-compressed files, while the options dialog disables the slider
+        // for PNG on the grounds that it does not apply.
+        mOptions.quality = -1;
     }
 }
 
@@ -437,7 +441,7 @@ const QString Screenshot::newFileName() const
     QString path   = QDir::toNativeSeparators(mOptions.directory.path());
 
     // Cleanup
-    if (path.at(path.size() - 1) != QDir::separator() && !path.isEmpty()) {
+    if (!path.isEmpty() && path.at(path.size() - 1) != QDir::separator()) {
         path.append(QDir::separator());
     }
 
