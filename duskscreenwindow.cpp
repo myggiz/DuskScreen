@@ -33,6 +33,7 @@
 #include <QToolTip>
 #include <QUrl>
 #include <QSoundEffect>
+#include <QStringBuilder>
 #include <QKeyEvent>
 
 #ifdef Q_OS_WIN
@@ -53,16 +54,29 @@
 #include <updater/updater.h>
 
 // Qt 6 removed QSound; QSoundEffect is the WAV-playback replacement. Fire-and-forget:
-// the effect deletes itself once playback finishes.
+// the effect deletes itself once playback finishes, or once loading fails —
+// without the latter, a source that never loads leaks the effect, because
+// playingChanged never fires.
 static void playSoundFile(const QString &fileName)
 {
     auto *effect = new QSoundEffect;
-    effect->setSource(QUrl::fromLocalFile(fileName));
+
     QObject::connect(effect, &QSoundEffect::playingChanged, effect, [effect] {
         if (!effect->isPlaying()) {
             effect->deleteLater();
         }
     });
+
+    QObject::connect(effect, &QSoundEffect::statusChanged, effect, [effect] {
+        if (effect->status() == QSoundEffect::Error) {
+            effect->deleteLater();
+        }
+    });
+
+    // Resolved against the install directory: the working directory is wherever
+    // the app happened to be launched from, which for an autostarted tray app is
+    // not the folder holding sounds/.
+    effect->setSource(QUrl::fromLocalFile(qApp->applicationDirPath() % QDir::separator() % fileName));
     effect->play();
 }
 
@@ -183,12 +197,13 @@ void DuskScreenWindow::cleanup(const Screenshot::Options &options)
         }
     }
 
-    if (settings()->value("options/playSound", false).toBool()) {
-        if (options.result == Screenshot::Success) {
-            playSoundFile("sounds/ls.screenshot.wav");
-        } else {
-            playSoundFile("sound/ls.error.wav");
-        }
+    // Only the success cue exists. The failure branch pointed at
+    // "sound/ls.error.wav" — a directory that has never existed (it is sounds/),
+    // and a file that has never been shipped — so it could only ever fail to
+    // load. Add the asset and restore the branch if a failure cue is wanted.
+    if (settings()->value("options/playSound", false).toBool()
+            && options.result == Screenshot::Success) {
+        playSoundFile("sounds/ls.screenshot.wav");
     }
 
     updateStatus();
@@ -732,7 +747,7 @@ void DuskScreenWindow::createTrayIcon()
     auto quitAction = new QAction(tr("&Quit"), mTrayIcon);
     connect(quitAction, &QAction::triggered, this, &DuskScreenWindow::quit);
 
-    auto screenshotMenu = new QMenu(tr("Screenshot"));
+    auto screenshotMenu = new QMenu(tr("Screenshot"), this);
     screenshotMenu->addAction(screenAction);
     screenshotMenu->addAction(areaAction);
     screenshotMenu->addAction(windowAction);
