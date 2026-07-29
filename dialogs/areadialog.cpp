@@ -100,12 +100,19 @@ AreaDialog::AreaDialog(Screenshot *screenshot) :
 
 QRect AreaDialog::resultRect() const
 {
-    auto devicePixelRatio = mScreenshot->pixmap().devicePixelRatio();
+    const qreal devicePixelRatio = mScreenshot->pixmap().devicePixelRatio();
 
-    return QRect(mSelection.left()   * devicePixelRatio,
-                 mSelection.top()    * devicePixelRatio,
-                 mSelection.width()  * devicePixelRatio,
-                 mSelection.height() * devicePixelRatio);
+    // Scaling into a QRectF and aligning outwards, rather than converting each
+    // component to int: truncating dropped a device pixel per edge whenever the
+    // scaled size landed on a fraction (a 301px selection at 150% became 451
+    // instead of 452), and scaling origin and size independently let the right
+    // and bottom edges drift by up to two.
+    const QRectF scaled(mSelection.left()   * devicePixelRatio,
+                        mSelection.top()    * devicePixelRatio,
+                        mSelection.width()  * devicePixelRatio,
+                        mSelection.height() * devicePixelRatio);
+
+    return scaled.toAlignedRect();
 }
 
 void AreaDialog::animationTick(int frame)
