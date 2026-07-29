@@ -51,7 +51,7 @@ static Display *x11Display()
 }
 #endif
 
-WindowPicker::WindowPicker() : QWidget(0), mCrosshair(":/icons/picker"), mWindowLabel(Q_NULLPTR), mTaken(false), mCurrentWindow(0)
+WindowPicker::WindowPicker() : QWidget(0), mCrosshair(":/icons/picker"), mWindowLabel(Q_NULLPTR), mCurrentWindow(0), mTaken(false)
 {
 #if defined(Q_OS_WIN)
     setWindowFlags(Qt::SplashScreen | Qt::WindowStaysOnTopHint);
@@ -189,6 +189,8 @@ void WindowPicker::mouseMoveEvent(QMouseEvent *event)
         return;
     }
 
+    Q_UNUSED(event) // the X11 path resolves the window from the pointer, not the event
+
     Window cWindow = os::windowUnderCursor(false);
 
     if (cWindow == mCurrentWindow) {
@@ -197,7 +199,7 @@ void WindowPicker::mouseMoveEvent(QMouseEvent *event)
 
     mCurrentWindow = cWindow;
 
-    if (mCurrentWindow == winId()) {
+    if (mCurrentWindow == None || mCurrentWindow == winId()) {
         mWindowIcon->setPixmap(QPixmap());
         mWindowLabel->setText("");
         return;
@@ -286,17 +288,27 @@ void WindowPicker::mousePressEvent(QMouseEvent *event)
 void WindowPicker::mouseReleaseEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
+        // Resolve the window once, here, and use that same handle for both the
+        // validity check and the grab. The Linux path used to check the window
+        // resolved at release but capture mCurrentWindow, which mouseMoveEvent
+        // had written — they disagree whenever move events stop arriving before
+        // the release, capturing a window the user wasn't pointing at.
 #if defined(Q_OS_WIN)
         POINT mousePos;
         mousePos.x = event->globalX();
         mousePos.y = event->globalY();
 
-        HWND nativeWindow = GetAncestor(WindowFromPoint(mousePos), GA_ROOT);
+        WId nativeWindow = (WId)GetAncestor(WindowFromPoint(mousePos), GA_ROOT);
 #elif defined(Q_OS_LINUX)
-        Window nativeWindow = os::windowUnderCursor(false);
+        WId nativeWindow = (WId)os::windowUnderCursor(false);
+#else
+        WId nativeWindow = 0;
 #endif
 
-        if ((WId)nativeWindow == winId()) {
+        // A zero handle means nothing pickable was under the cursor. Qt reads it
+        // as "grab the entire screen", so the picker would silently return a
+        // full-desktop capture instead of a window.
+        if (nativeWindow == 0 || nativeWindow == winId()) {
             cancel();
             return;
         }
@@ -307,9 +319,9 @@ void WindowPicker::mouseReleaseEvent(QMouseEvent *event)
         close();
 
 #ifdef Q_OS_LINUX
-        emit pixmap(QGuiApplication::primaryScreen()->grabWindow(mCurrentWindow));
+        emit pixmap(QGuiApplication::primaryScreen()->grabWindow(nativeWindow));
 #else
-        emit pixmap(os::grabWindow((WId)nativeWindow));
+        emit pixmap(os::grabWindow(nativeWindow));
 #endif
 
         return;

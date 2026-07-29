@@ -465,11 +465,10 @@ Window os::windowUnderCursor(bool includeDecorations)
     }
 
     if (!includeDecorations) {
-        Window real_child = os::findRealWindow(child);
-
-        if (real_child != None) {  // test just in case
-            child = real_child;
-        }
+        // Callers that ask for a real window want a pickable client, not the
+        // root: grabbing the root yields the whole desktop, which is not what
+        // the window picker was asked for. Report "nothing here" instead.
+        return os::findRealWindow(child);
     }
 
     return child;
