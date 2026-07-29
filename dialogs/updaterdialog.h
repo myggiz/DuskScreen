@@ -29,7 +29,7 @@ public:
     UpdaterDialog(QWidget *parent = 0);
 
 public slots:
-    void updateDone(bool result);
+    void updateDone(bool available, const QString &version, const QString &url);
 
 private slots:
     void link(QString url);

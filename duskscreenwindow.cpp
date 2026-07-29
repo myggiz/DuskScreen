@@ -147,11 +147,11 @@ void DuskScreenWindow::checkForUpdates()
         return;
     }
 
-    if (settings()->value("lastUpdateCheck").toInt() + 7
-            > QDate::currentDate().dayOfYear()) {
-        return;    // If 7 days have not passed since the last update check.
-    }
-
+    // Checked once per launch. The previous throttle compared raw day-of-year
+    // numbers with no year, so a check late in December suppressed every
+    // subsequent check for most of the following year. Declining a specific
+    // version is remembered in updaterDone() instead, which is what actually
+    // stops the prompt being repetitive.
     mUpdater = new Updater(this);
 
     connect(mUpdater, &Updater::done, this, &DuskScreenWindow::updaterDone);
@@ -598,31 +598,39 @@ void DuskScreenWindow::updateStatus()
     }
 }
 
-void DuskScreenWindow::updaterDone(bool result)
+void DuskScreenWindow::updaterDone(bool available, const QString &version, const QString &url)
 {
     mUpdater->deleteLater();
 
-    settings()->setValue("lastUpdateCheck", QDate::currentDate().dayOfYear());
+    if (!available) {
+        return;
+    }
 
-    if (!result) {
+    // Because the check now runs on every launch, a version the user has
+    // already declined must not prompt again — DuskScreen can start with the
+    // system, so that would mean a dialog at every login.
+    if (settings()->value("options/skippedVersion").toString() == version) {
         return;
     }
 
     QMessageBox msgBox;
     msgBox.setWindowTitle(tr("DuskScreen"));
-    msgBox.setText(tr("There's a new version of DuskScreen available.<br>Would you like to see more information?<br>(<em>You can turn this notification off</em>)"));
+    msgBox.setText(tr("DuskScreen %1 is available.<br>You are running %2.").arg(version, qApp->applicationVersion()));
     msgBox.setIcon(QMessageBox::Information);
 
-    QPushButton *yesButton     = msgBox.addButton(QMessageBox::Yes);
-    QPushButton *turnOffButton = msgBox.addButton(tr("Turn Off"), QMessageBox::ActionRole);
+    QPushButton *viewButton    = msgBox.addButton(tr("View Release"), QMessageBox::AcceptRole);
+    QPushButton *skipButton    = msgBox.addButton(tr("Skip This Version"), QMessageBox::ActionRole);
+    QPushButton *turnOffButton = msgBox.addButton(tr("Turn Off Updates"), QMessageBox::ActionRole);
     QPushButton *remindButton  = msgBox.addButton(tr("Remind Me Later"), QMessageBox::RejectRole);
 
     Q_UNUSED(remindButton);
 
     msgBox.exec();
 
-    if (msgBox.clickedButton() == yesButton) {
-        QDesktopServices::openUrl(QUrl(QString(APP_URL "/whatsnew?from=") + qApp->applicationVersion()));
+    if (msgBox.clickedButton() == viewButton) {
+        QDesktopServices::openUrl(QUrl(url));
+    } else if (msgBox.clickedButton() == skipButton) {
+        settings()->setValue("options/skippedVersion", version);
     } else if (msgBox.clickedButton() == turnOffButton) {
         settings()->setValue("options/disableUpdater", true);
     }

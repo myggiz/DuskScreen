@@ -18,7 +18,8 @@
  */
 
 #include <QApplication>
-#include <QDate>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
@@ -27,21 +28,37 @@
 #include <updater/updater.h>
 #include <dialogs/updaterdialog.h>
 
+namespace {
+
+// The GitHub Releases API is the source of truth for what has shipped, so there
+// is no update server to run. It returns the newest non-draft, non-prerelease
+// release, including its tag and the page a user should be sent to.
+const QLatin1String kLatestReleaseUrl(
+    "https://api.github.com/repos/myggiz/DuskScreen/releases/latest");
+
+// Unauthenticated GitHub API calls are rate limited per IP, which is irrelevant
+// at one request per launch, but the request should not hang if the API is
+// unreachable — without this the reply never finishes and the Updater (and its
+// QNetworkAccessManager) survive for the whole session.
+const int kTimeoutMs = 15000;
+
+}
+
 Updater::Updater(QObject *parent) :
     QObject(parent)
 {
-    connect(&mNetwork, SIGNAL(finished(QNetworkReply *)), this, SLOT(finished(QNetworkReply *)));
+    connect(&mNetwork, &QNetworkAccessManager::finished, this, &Updater::finished);
 }
 
 void Updater::check()
 {
-#ifdef Q_OS_WIN
-    QString platform = QString("Windows_%1").arg(QSysInfo::productVersion());
-#else
-    QString platform = QSysInfo::productType();
-#endif
+    QNetworkRequest request{QUrl(kLatestReleaseUrl)};
 
-    QNetworkRequest request(QUrl::fromUserInput(QString(APP_URL "/version?from=") + qApp->applicationVersion() + "&platform=" + platform));
+    request.setRawHeader("Accept", "application/vnd.github+json");
+    request.setHeader(QNetworkRequest::UserAgentHeader,
+                      QString("DuskScreen/%1").arg(qApp->applicationVersion()));
+    request.setTransferTimeout(kTimeoutMs);
+
     mNetwork.get(request);
 }
 
@@ -56,10 +73,37 @@ void Updater::checkWithFeedback()
 
 void Updater::finished(QNetworkReply *reply)
 {
-    QByteArray data = reply->readAll();
+    reply->deleteLater();
 
-    auto currentVersion = QVersionNumber::fromString(qApp->applicationVersion()).normalized();
-    auto remoteVersion  = QVersionNumber::fromString(QString(data)).normalized();
+    if (reply->error() != QNetworkReply::NoError) {
+        emit done(false, QString(), QString());
+        return;
+    }
 
-    emit done(remoteVersion > currentVersion);
+    const QJsonDocument document = QJsonDocument::fromJson(reply->readAll());
+
+    if (!document.isObject()) {
+        emit done(false, QString(), QString());
+        return;
+    }
+
+    const QJsonObject release = document.object();
+
+    QString version = release.value("tag_name").toString();
+    const QString url = release.value("html_url").toString();
+
+    // Tags are published as "v1.0.6"; QVersionNumber wants bare digits.
+    if (version.startsWith(QLatin1Char('v'), Qt::CaseInsensitive)) {
+        version.remove(0, 1);
+    }
+
+    const auto remoteVersion  = QVersionNumber::fromString(version).normalized();
+    const auto currentVersion = QVersionNumber::fromString(qApp->applicationVersion()).normalized();
+
+    if (remoteVersion.isNull() || url.isEmpty() || remoteVersion <= currentVersion) {
+        emit done(false, QString(), QString());
+        return;
+    }
+
+    emit done(true, version, url);
 }

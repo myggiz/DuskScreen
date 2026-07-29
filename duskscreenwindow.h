@@ -70,7 +70,7 @@ public slots:
     void showScreenshotMessage(const Screenshot::Result &result, const QString &fileName);
     void toggleVisibility();
     void updateStatus();
-    void updaterDone(bool result);
+    void updaterDone(bool available, const QString &version, const QString &url);
     void windowHotkey();
     void windowPickerHotkey();
 
