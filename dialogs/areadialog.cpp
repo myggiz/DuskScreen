@@ -71,7 +71,7 @@ AreaDialog::AreaDialog(Screenshot *screenshot) :
     mAcceptWidget = new QWidget(this);
     mAcceptWidget->resize(140, 70);
     mAcceptWidget->setWindowOpacity(0.4);
-    mAcceptWidget->setStyleSheet("QWidget { background: rgba(255, 255, 255, 200); border: 4px solid #232323; padding: 0; } QPushButton { background: transparent; border: none; height: 50px; padding: 5px; } QPushButton:hover { cursor: hand; }");
+    mAcceptWidget->setStyleSheet("QWidget { background: rgba(255, 255, 255, 200); border: 4px solid #232323; padding: 0; } QPushButton { background: transparent; border: none; height: 50px; padding: 5px; }");
 
     auto awAcceptButton = new QPushButton(QIcon(":/icons/yes.big"), "", this);
     connect(awAcceptButton, &QPushButton::clicked, this, &AreaDialog::grabRect);
