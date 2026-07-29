@@ -188,6 +188,14 @@ void Screenshot::save()
         name = newFileName();
     } else if (mOptions.file && mOptions.saveAs) {
         name = QFileDialog::getSaveFileName(0, tr("Save as.."), newFileName(), "*" % extension());
+
+        // The native dialog appends the filter's extension to the suggested
+        // (extension-less) name. Everything below works on a bare name — the
+        // duplicate-name scan and the final append — so strip it back off
+        // instead of ending up with "screenshot.1.png.png".
+        if (name.endsWith(extension(), Qt::CaseInsensitive)) {
+            name.chop(extension().size());
+        }
     }
 
     if (!mOptions.replace && QFile::exists(name % extension())) {
