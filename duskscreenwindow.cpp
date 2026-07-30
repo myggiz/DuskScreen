@@ -186,9 +186,12 @@ void DuskScreenWindow::cleanup(const Screenshot::Options &options)
         if (mWasVisible) {
             show();
         }
-
-        mHideTrigger = false;
     }
+
+    // Cleared unconditionally: while the hide option was off this stayed latched
+    // from the first capture of the session, so mWasVisible was never refreshed
+    // and enabling the option later restored a long-stale visibility state.
+    mHideTrigger = false;
 
     if (settings()->value("options/tray").toBool() && mTrayIcon) {
         notify(options.result);
