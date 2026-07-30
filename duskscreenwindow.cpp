@@ -277,8 +277,11 @@ void DuskScreenWindow::goToFolder()
         QDir path(settings()->value("file/target").toString());
 
         // We might want to go to the folder without it having been created by taking a screenshot yet.
-        if (!path.exists()) {
-            path.mkpath(path.absolutePath());
+        if (!path.exists() && !path.mkpath(path.absolutePath())) {
+            // Opening a directory that doesn't exist silently does nothing on
+            // some platforms, which looks like the button being broken.
+            qWarning() << "Could not create the screenshot directory:" << path.absolutePath();
+            return;
         }
 
         QDesktopServices::openUrl(QUrl::fromLocalFile(path.absolutePath() + QDir::separator()));
@@ -449,9 +452,18 @@ void DuskScreenWindow::screenshotAction(Screenshot::Mode mode, bool delayed)
     static Screenshot::Options options;
 
     if (!mDoCache) {
+        // Both enums come straight out of a settings file the user can edit, and
+        // that importSettings() copies in without checking values. An
+        // out-of-range Naming matches no case in Screenshot::getName(), leaving
+        // the "%1" placeholder unsubstituted in every filename, so clamp rather
+        // than cast blindly.
+        const int storedFormat = settings()->value("file/format").toInt();
+        const int storedNaming = settings()->value("file/naming").toInt();
+
         // Populating the option object that will then be passed to the screenshot engine (sounds fancy huh?)
         options.file           = settings()->value("file/enabled").toBool();
-        options.format         = (Screenshot::Format) settings()->value("file/format").toInt();
+        options.format         = (storedFormat >= Screenshot::PNG && storedFormat <= Screenshot::WEBP)
+                                 ? (Screenshot::Format) storedFormat : Screenshot::PNG;
         options.prefix         = settings()->value("file/prefix").toString();
 
         QDir dir(settings()->value("file/target").toString());
@@ -470,7 +482,8 @@ void DuskScreenWindow::screenshotAction(Screenshot::Mode mode, bool delayed)
         options.optimize       = settings()->value("options/optimize",       false).toBool();
 
         Screenshot::NamingOptions namingOptions;
-        namingOptions.naming       = (Screenshot::Naming) settings()->value("file/naming").toInt();
+        namingOptions.naming       = (storedNaming >= Screenshot::Numeric && storedNaming <= Screenshot::Empty)
+                                     ? (Screenshot::Naming) storedNaming : Screenshot::Numeric;
         namingOptions.leadingZeros = settings()->value("options/naming/leadingZeros", 0).toInt();
         namingOptions.flip         = settings()->value("options/flip", false).toBool();
         namingOptions.dateFormat   = settings()->value("options/naming/dateFormat", "yyyy-MM-dd").toString();
