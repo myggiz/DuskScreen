@@ -36,12 +36,12 @@
 #include <QShortcut>
 #include <QTimer>
 #include <QToolTip>
-#include <QThread>
 
 AreaDialog::AreaDialog(Screenshot *screenshot) :
     QDialog(0), mScreenshot(screenshot), mMouseDown(false), mMouseMagnifier(false),
     mNewSelection(false), mHandleSize(10), mMouseOverHandle(0),
     mShowHelp(true), mGrabbing(false), mOverlayAlpha(1), mAutoclose(false), mLocalMagnify(screenshot->options().magnify),
+    mRefreshing(false),
     mTLHandle(0, 0, mHandleSize, mHandleSize), mTRHandle(0, 0, mHandleSize, mHandleSize),
     mBLHandle(0, 0, mHandleSize, mHandleSize), mBRHandle(0, 0, mHandleSize, mHandleSize),
     mLHandle(0, 0, mHandleSize, mHandleSize), mTHandle(0, 0, mHandleSize, mHandleSize),
@@ -73,23 +73,27 @@ AreaDialog::AreaDialog(Screenshot *screenshot) :
     mAcceptWidget->setWindowOpacity(0.4);
     mAcceptWidget->setStyleSheet("QWidget { background: rgba(255, 255, 255, 200); border: 4px solid #232323; padding: 0; } QPushButton { background: transparent; border: none; height: 50px; padding: 5px; }");
 
-    auto awAcceptButton = new QPushButton(QIcon(":/icons/yes.big"), "", this);
+    // Parented to the accept widget, not the dialog: passing `this` put the
+    // buttons on the full-screen overlay and installed the layout on the dialog
+    // itself, so the later setLayout() call was a no-op ("already has a
+    // parent"). The buttons were laid out across the whole screen while the
+    // 140x70 box that show()/hide() toggles stayed empty.
+    auto awAcceptButton = new QPushButton(QIcon(":/icons/yes.big"), "", mAcceptWidget);
     connect(awAcceptButton, &QPushButton::clicked, this, &AreaDialog::grabRect);
     awAcceptButton->setCursor(Qt::PointingHandCursor);
     awAcceptButton->setIconSize(QSize(48, 48));
 
-    auto awRejectButton = new QPushButton(QIcon(":/icons/no.big"), "", this);
+    auto awRejectButton = new QPushButton(QIcon(":/icons/no.big"), "", mAcceptWidget);
     connect(awRejectButton, &QPushButton::clicked, this, &AreaDialog::cancel);
     awRejectButton->setCursor(Qt::PointingHandCursor);
     awRejectButton->setIconSize(QSize(48, 48));
 
-    auto awLayout = new QHBoxLayout(this);
+    auto awLayout = new QHBoxLayout(mAcceptWidget);
     awLayout->addWidget(awAcceptButton);
     awLayout->addWidget(awRejectButton);
     awLayout->setContentsMargins(0, 0, 0, 0);
     awLayout->setSpacing(0);
 
-    mAcceptWidget->setLayout(awLayout);
     mAcceptWidget->setVisible(false);
 
     auto shortcut = new QShortcut(QKeySequence("Ctrl+M"), this);
@@ -220,10 +224,23 @@ void AreaDialog::keyPressEvent(QKeyEvent *e)
             update();
         }
     } else if (e->key() == Qt::Key_F5) {
+        // Sleeping here blocked the event loop, so the window system never got
+        // to process the opacity change we were waiting on — the overlay could
+        // still end up in the regrab. Yielding to the loop lets the hide take
+        // effect before the desktop is grabbed again.
+        if (mRefreshing) {
+            return;
+        }
+
+        mRefreshing = true;
         setWindowOpacity(0);
-        QThread::msleep(200); // Give the window system time to catch up
-        mScreenshot->refresh();
-        setWindowOpacity(1);
+
+        QTimer::singleShot(200, this, [this] {
+            mScreenshot->refresh();
+            setWindowOpacity(1);
+            mRefreshing = false;
+            update();
+        });
     } else {
         if (e->key() == Qt::Key_Backspace && !mKeyboardSize.isEmpty()) {
             mKeyboardSize.remove(mKeyboardSize.size()-1, 1);
