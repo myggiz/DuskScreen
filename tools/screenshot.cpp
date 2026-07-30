@@ -204,28 +204,18 @@ void Screenshot::save()
     }
 
     if (!mOptions.replace && QFile::exists(name % extension())) {
-        // Ugly? You should see my wife!
-        int count = 0;
-        int cunt  = 0;
+        // Probe for the first free " (n)" instead of listing the directory and
+        // parsing names back apart. The old string surgery stripped the base
+        // name and then read whatever digits remained, so an unrelated file that
+        // merely started with the same text — "shot.7.png" beside "shot." — was
+        // read as suffix 7 and pushed the next capture to " (8)".
+        int count = 1;
 
-        QString naming = QFileInfo(name).fileName();
-
-        for (auto file : QFileInfo(name % extension()).dir().entryList(QDir::Files)) {
-            if (file.contains(naming)) {
-                file.remove(naming);
-                file.remove(" (");
-                file.remove(")");
-                file.remove(extension());
-
-                cunt = file.toInt();
-
-                if (cunt > count) {
-                    count = cunt;
-                }
-            }
+        while (QFile::exists(name % " (" % QString::number(count) % ")" % extension())) {
+            ++count;
         }
 
-        name = name % " (" % QString::number(count + 1) % ")";
+        name = name % " (" % QString::number(count) % ")";
     }
 
     if (mOptions.clipboard) {
