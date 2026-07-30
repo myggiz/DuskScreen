@@ -237,14 +237,14 @@ void Screenshot::save()
     }
 
     if (mOptions.file) {
-        fileName = name % extension();
-
         if (name.isEmpty()) {
+            // Save As dismissed: leave fileName empty rather than reporting a
+            // bare ".png", which the optimize step below would then run on.
             result = Screenshot::Cancel;
-        } else if (mPixmap.save(fileName, 0, mOptions.quality)) {
-            result = Screenshot::Success;
         } else {
-            result = Screenshot::Failure;
+            fileName = name % extension();
+            result = mPixmap.save(fileName, 0, mOptions.quality) ? Screenshot::Success
+                                                                 : Screenshot::Failure;
         }
     }
 
@@ -252,7 +252,10 @@ void Screenshot::save()
     mOptions.result   = result;
 
     if (!mOptions.result) {
+        // Failure: finish here. Falling through emitted finished() a second
+        // time, or started optimize() on a file that was never written.
         emit finished();
+        return;
     }
 
     if (mOptions.format == Screenshot::PNG && mOptions.optimize && mOptions.file) {
