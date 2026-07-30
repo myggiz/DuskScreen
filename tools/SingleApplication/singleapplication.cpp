@@ -225,8 +225,14 @@ void SingleApplication::slotConnectionEstablished()
         socket->close();
     });
 
-    // Makes sure we delete the socket object even if we receive no data
+    // Makes sure we delete the socket object even if we receive no data.
+    // aboutToClose only fires when *we* close the socket, i.e. after the
+    // readyRead handler above has run. A client that connects and disconnects
+    // without sending anything never reaches it, leaving the socket alive for
+    // the lifetime of the server — measured at ~7.5 kB a time. disconnected()
+    // covers the peer-initiated case.
     connect(socket, &QLocalSocket::aboutToClose, socket, &QLocalSocket::deleteLater);
+    connect(socket, &QLocalSocket::disconnected, socket, &QLocalSocket::deleteLater);
 }
 
 
