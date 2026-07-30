@@ -28,6 +28,7 @@
 #include <QTextStream>
 #include <QScreen>
 #include <QStringBuilder>
+#include <QDebug>
 
 #include <tools/screenshot.h>
 #include <tools/screenshotmanager.h>
@@ -433,8 +434,11 @@ void Screenshot::grabDesktop(bool includeCursor)
 
 const QString Screenshot::newFileName() const
 {
-    if (!mOptions.directory.exists()) {
-        mOptions.directory.mkpath(mOptions.directory.path());
+    if (!mOptions.directory.exists() && !mOptions.directory.mkpath(mOptions.directory.path())) {
+        // The save below will fail and be reported as a failure; name the
+        // directory here so the cause is diagnosable rather than just "an error
+        // occurred" — an unwritable or stale target is the usual reason.
+        qWarning() << "Could not create the screenshot directory:" << mOptions.directory.path();
     }
 
     QString naming = Screenshot::getName(mOptions.namingOptions, mOptions.prefix, mOptions.directory);
