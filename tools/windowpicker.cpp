@@ -29,8 +29,9 @@
 #include <tools/windowpicker.h>
 #include <tools/os.h>
 
+#include <QImage>
+
 #if defined(Q_OS_WIN)
-    #include <QImage>
     #include <windows.h>
 
 #elif defined(Q_OS_LINUX)
@@ -49,6 +50,12 @@ static Display *x11Display()
     auto *x11app = qGuiApp->nativeInterface<QNativeInterface::QX11Application>();
     return x11app ? x11app->display() : nullptr;
 }
+
+// Bounds on what we accept from _NET_WM_ICON, which any window on the display
+// can set: enough elements for a generous icon set, and a per-edge cap so a
+// bogus size can't be used to compute an enormous allocation.
+const long kMaxIconElements = 1024 * 1024;
+const unsigned long kMaxIconEdge = 4096;
 #endif
 
 WindowPicker::WindowPicker() : QWidget(0), mCrosshair(":/icons/picker"), mWindowLabel(Q_NULLPTR), mCurrentWindow(0), mTaken(false)
@@ -222,36 +229,79 @@ void WindowPicker::mouseMoveEvent(QMouseEvent *event)
         XFree(tp.value);
     }
 
-    // Retrieving the _NET_WM_ICON property.
+    // _NET_WM_ICON holds a sequence of icons, each an ARGB image preceded by its
+    // width and height. Fetched in a single request: the previous code issued
+    // three (two of them one-element reads just for the dimensions), so the
+    // property could change between them, and it read those dimensions as bytes.
+    // A format-32 property arrives as an array of long — eight bytes per element
+    // on 64-bit — so that yielded only the low byte of the width, turning a
+    // 300px icon into 44px, and the pixels were then handed to QImage as if they
+    // were packed 32-bit values.
     Atom type_ret = None;
-    unsigned char *data = 0;
     int format = 0;
     unsigned long n = 0;
     unsigned long extra = 0;
-    int width = 0;
-    int height = 0;
+    unsigned char *iconData = nullptr;
 
-    Atom _net_wm_icon = XInternAtom(x11Display(), "_NET_WM_ICON", False);
+    const Atom _net_wm_icon = XInternAtom(x11Display(), "_NET_WM_ICON", False);
 
-    if (XGetWindowProperty(x11Display(), cWindow, _net_wm_icon, 0, 1, False,
-                           XA_CARDINAL, &type_ret, &format, &n, &extra, (unsigned char **)&data) == Success && data) {
-        width = data[0];
-        XFree(data);
-    }
+    mWindowIcon->setPixmap(QPixmap());
 
-    if (XGetWindowProperty(x11Display(), cWindow, _net_wm_icon, 1, 1, False,
-                           XA_CARDINAL, &type_ret, &format, &n, &extra, (unsigned char **)&data) == Success && data) {
-        height = data[0];
-        XFree(data);
-    }
+    if (XGetWindowProperty(x11Display(), cWindow, _net_wm_icon, 0, kMaxIconElements, False,
+                           XA_CARDINAL, &type_ret, &format, &n, &extra, &iconData) == Success
+            && iconData) {
 
-    if (XGetWindowProperty(x11Display(), cWindow, _net_wm_icon, 2, width * height, False,
-                           XA_CARDINAL, &type_ret, &format, &n, &extra, (unsigned char **)&data) == Success && data) {
-        QImage img(data, width, height, QImage::Format_ARGB32);
-        mWindowIcon->setPixmap(QPixmap::fromImage(img));
-        XFree(data);
-    } else {
-        mWindowIcon->setPixmap(QPixmap());
+        if (format == 32 && type_ret == XA_CARDINAL) {
+            const unsigned long *elements = reinterpret_cast<const unsigned long *>(iconData);
+
+            unsigned long bestOffset = 0;
+            int bestWidth  = 0;
+            int bestHeight = 0;
+
+            // Walk the icons, keeping the largest that actually fits inside what
+            // the server returned. Any window on the display can set this
+            // property, so the advertised sizes are not to be trusted.
+            for (unsigned long i = 0; i + 2 <= n;) {
+                const unsigned long iconWidth  = elements[i];
+                const unsigned long iconHeight = elements[i + 1];
+
+                if (iconWidth == 0 || iconHeight == 0
+                        || iconWidth > kMaxIconEdge || iconHeight > kMaxIconEdge) {
+                    break;
+                }
+
+                if (i + 2 + iconWidth * iconHeight > n) {
+                    break;    // advertised larger than delivered — stop, don't over-read
+                }
+
+                if (static_cast<int>(iconWidth) > bestWidth) {
+                    bestWidth  = static_cast<int>(iconWidth);
+                    bestHeight = static_cast<int>(iconHeight);
+                    bestOffset = i + 2;
+                }
+
+                i += 2 + iconWidth * iconHeight;
+            }
+
+            if (bestWidth > 0) {
+                // One pixel per element, in its low 32 bits, so they have to be
+                // repacked rather than reinterpreted.
+                QImage icon(bestWidth, bestHeight, QImage::Format_ARGB32);
+
+                for (int y = 0; y < bestHeight; ++y) {
+                    QRgb *line = reinterpret_cast<QRgb *>(icon.scanLine(y));
+
+                    for (int x = 0; x < bestWidth; ++x) {
+                        line[x] = static_cast<QRgb>(
+                                      elements[bestOffset + static_cast<unsigned long>(y) * bestWidth + x] & 0xffffffffUL);
+                    }
+                }
+
+                mWindowIcon->setPixmap(QPixmap::fromImage(icon));
+            }
+        }
+
+        XFree(iconData);
     }
 
 #endif
