@@ -17,6 +17,7 @@
  *
  */
 #include <QActionGroup>
+#include <QApplication>
 #include <QDate>
 #include <QDesktopServices>
 #include <QFileInfo>
@@ -411,6 +412,14 @@ void DuskScreenWindow::restoreNotification()
 
 void DuskScreenWindow::screenshotAction(Screenshot::Mode mode, bool delayed)
 {
+    // A capture UI of ours may already be open. The area selector runs a nested
+    // event loop with the global hotkeys still registered, so a hotkey pressed
+    // mid-selection re-entered here — capturing the dark selection overlay, or
+    // stacking a second full-screen selector on top of the first.
+    if (QApplication::activeModalWidget()) {
+        return;
+    }
+
     int delayms = -1;
 
     bool optionsHide = settings()->value("options/hide").toBool(); // Option cache, used a couple of times.
