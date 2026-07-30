@@ -92,14 +92,18 @@ inline size_t QtKeyToWin(Qt::Key key)
         return VK_SPACE;
     case Qt::Key_Asterisk:
         return VK_MULTIPLY;
+    // OEM codes, not the numeric-keypad ones: these Qt keys are the main-row
+    // punctuation, so VK_ADD/VK_SEPARATOR/VK_SUBTRACT/VK_DIVIDE registered a
+    // keypad key the user never pressed — and VK_SEPARATOR barely exists on
+    // real keyboards, so that binding could not fire at all.
     case Qt::Key_Plus:
-        return VK_ADD;
+        return VK_OEM_PLUS;
     case Qt::Key_Comma:
-        return VK_SEPARATOR;
+        return VK_OEM_COMMA;
     case Qt::Key_Minus:
-        return VK_SUBTRACT;
+        return VK_OEM_MINUS;
     case Qt::Key_Slash:
-        return VK_DIVIDE;
+        return VK_OEM_2;
     case Qt::Key_MediaNext:
         return VK_MEDIA_NEXT_TRACK;
     case Qt::Key_MediaPrevious:
@@ -114,10 +118,6 @@ inline size_t QtKeyToWin(Qt::Key key)
         return VK_VOLUME_UP;
     case Qt::Key_VolumeMute:
         return VK_VOLUME_MUTE;
-    }
-
-    if (key >= 0x01000030 && key <= 0x01000047) {
-        return VK_F1 + (key - Qt::Key_F1);
     }
 
     return key;
