@@ -86,6 +86,7 @@ protected:
     int   mOverlayAlpha;
     bool  mAutoclose;
     bool  mLocalMagnify;
+    bool  mRefreshing;
 
     // naming convention for handles
     // T top, B bottom, R Right, L left
