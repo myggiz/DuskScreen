@@ -85,11 +85,9 @@ DuskScreenWindow::DuskScreenWindow(QWidget *parent) :
     QMainWindow(parent),
     mDoCache(false),
     mHideTrigger(false),
-    mReviveMain(false),
     mWasVisible(true),
     mLastMessage(0),
-    mLastScreenshot(),
-    mHasTaskbarButton(false)
+    mLastScreenshot()
 {
     ui.setupUi(this);
 
@@ -119,7 +117,6 @@ DuskScreenWindow::DuskScreenWindow(QWidget *parent) :
     });
 
     // Manager
-    connect(ScreenshotManager::instance(), &ScreenshotManager::confirm,           this, &DuskScreenWindow::preview);
     connect(ScreenshotManager::instance(), &ScreenshotManager::windowCleanup,     this, &DuskScreenWindow::cleanup);
     connect(ScreenshotManager::instance(), &ScreenshotManager::activeCountChange, this, &DuskScreenWindow::updateStatus);
 
@@ -344,21 +341,11 @@ void DuskScreenWindow::notify(const Screenshot::Result &result)
     switch (result) {
     case Screenshot::Success:
         mTrayIcon->setIcon(QIcon(":/icons/lightscreen.yes"));
-
-        if (mHasTaskbarButton) {
-            mTaskbarButton->setOverlayIcon(os::icon("yes"));
-        }
-
         setWindowTitle(tr("Success!"));
         break;
     case Screenshot::Failure:
         mTrayIcon->setIcon(QIcon(":/icons/lightscreen.no"));
         setWindowTitle(tr("Failed!"));
-
-        if (mHasTaskbarButton) {
-            mTaskbarButton->setOverlayIcon(os::icon("no"));
-        }
-
         break;
     case Screenshot::Cancel:
         setWindowTitle(tr("Cancelled!"));
@@ -368,10 +355,6 @@ void DuskScreenWindow::notify(const Screenshot::Result &result)
     QTimer::singleShot(2000, this, &DuskScreenWindow::restoreNotification);
 }
 
-void DuskScreenWindow::preview(Screenshot *screenshot)
-{
-    screenshot->confirm(true);
-}
 
 void DuskScreenWindow::quit()
 {
@@ -401,13 +384,6 @@ void DuskScreenWindow::restoreNotification()
 {
     if (mTrayIcon) {
         mTrayIcon->setIcon(QIcon(":/icons/lightscreen.small"));
-    }
-
-    if (mHasTaskbarButton) {
-        mTaskbarButton->clearOverlayIcon();
-        mTaskbarButton->progress()->setVisible(false);
-        mTaskbarButton->progress()->stop();
-        mTaskbarButton->progress()->reset();
     }
 
     updateStatus();
@@ -620,21 +596,12 @@ void DuskScreenWindow::updateStatus()
 {
     int activeCount = ScreenshotManager::instance()->activeCount();
 
-    if (mHasTaskbarButton) {
-        mTaskbarButton->progress()->setPaused(true);
-        mTaskbarButton->progress()->setVisible(true);
-    }
-
     if (activeCount > 1) {
         setStatus(tr("%1 processing").arg(activeCount));
     } else if (activeCount == 1) {
         setStatus(tr("processing"));
     } else {
         setStatus();
-
-        if (mHasTaskbarButton) {
-            mTaskbarButton->progress()->setVisible(false);
-        }
     }
 }
 
@@ -674,11 +641,6 @@ void DuskScreenWindow::updaterDone(bool available, const QString &version, const
     } else if (msgBox.clickedButton() == turnOffButton) {
         settings()->setValue("options/disableUpdater", true);
     }
-}
-
-void DuskScreenWindow::windowHotkey()
-{
-    screenshotAction(Screenshot::ActiveWindow);
 }
 
 void DuskScreenWindow::windowPickerHotkey()
@@ -818,10 +780,6 @@ bool DuskScreenWindow::event(QEvent *event)
 
         if (!savedPosition.isNull() && screen()->availableVirtualGeometry().contains(QRect(savedPosition, size()))) {
             move(savedPosition);
-        }
-
-        if (mHasTaskbarButton) {
-            mTaskbarButton->setWindow(windowHandle());
         }
     } else if (event->type() == QEvent::Hide) {
         settings()->setValue("position", pos());
