@@ -123,7 +123,20 @@ WindowPicker::WindowPicker() : QWidget(0), mCrosshair(":/icons/picker"), mWindow
     setLayout(l);
 
     resize(sizeHint());
-    move(QGuiApplication::screenAt(QCursor::pos())->geometry().center() - QPoint(width() / 2, height() / 2));
+
+    // screenAt() returns null when the cursor sits on a coordinate no screen
+    // covers — a monitor just unplugged, or a gap between differently-sized
+    // ones. Screenshot::grabDesktop() already falls back the same way.
+    const QScreen *cursorScreen = QGuiApplication::screenAt(QCursor::pos());
+
+    if (!cursorScreen) {
+        cursorScreen = QGuiApplication::primaryScreen();
+    }
+
+    if (cursorScreen) {
+        move(cursorScreen->geometry().center() - QPoint(width() / 2, height() / 2));
+    }
+
     show();
 }
 
