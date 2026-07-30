@@ -11,6 +11,7 @@
 #include "uglobalhotkeys.h"
 
 #include <QDebug>
+#include <cstdlib>
 
 UGlobalHotkeys::UGlobalHotkeys(QWidget *parent)
     : QWidget(parent)
@@ -84,7 +85,7 @@ bool UGlobalHotkeys::registerHotkey(const UKeySequence &keySeq, size_t id)
         Registered.insert(id);
     }
 #elif defined(Q_OS_LINUX)
-    regLinuxHotkey(keySeq, id);
+    return regLinuxHotkey(keySeq, id);
 #endif
 #if defined(Q_OS_MAC)
     unregisterHotkey(id);
@@ -207,30 +208,58 @@ bool UGlobalHotkeys::linuxEvent(xcb_generic_event_t *message)
     return false;
 }
 
-void UGlobalHotkeys::regLinuxHotkey(const UKeySequence &keySeq, size_t id)
+bool UGlobalHotkeys::regLinuxHotkey(const UKeySequence &keySeq, size_t id)
 {
+    if (!X11Connection || !X11KeySymbs) {
+        return false;    // non-X11 (e.g. Wayland): nothing to grab on.
+    }
+
     UHotkeyData data;
     UKeyData keyData = QtKeyToLinux(keySeq);
-    
+
+    // Returns a malloc'd, NO_SYMBOL-terminated array that the caller owns.
     xcb_keycode_t *keyC = xcb_key_symbols_get_keycode(X11KeySymbs, keyData.key);
 
-    if (keyC == XCB_NO_SYMBOL) { // 0x0
-        qWarning() << "Cannot find symbol";
-        return;
+    if (!keyC || *keyC == XCB_NO_SYMBOL) {
+        qWarning() << "No X11 keycode for the requested hotkey";
+        free(keyC);
+        return false;
     }
 
     data.keyCode = *keyC;
     data.mods = keyData.mods;
 
-    xcb_grab_key(X11Connection, 1, X11Wid, data.mods, data.keyCode, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
-    // NumLk
-    xcb_grab_key(X11Connection, 1, X11Wid, data.mods | XCB_MOD_MASK_2, data.keyCode, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
+    free(keyC);
+
+    // Checked requests: an unchecked xcb_grab_key reports a key already held by
+    // something else — a desktop environment owning Print, say — as an
+    // asynchronous error nobody reads, so the caller was told the hotkey had
+    // been registered when it had not.
+    if (xcb_generic_error_t *error = xcb_request_check(X11Connection,
+            xcb_grab_key_checked(X11Connection, 1, X11Wid, data.mods, data.keyCode,
+                                 XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC))) {
+        free(error);
+        return false;
+    }
+
+    // The NumLock variant is a convenience: failing to grab it does not stop the
+    // hotkey working, so it must not fail the registration.
+    if (xcb_generic_error_t *error = xcb_request_check(X11Connection,
+            xcb_grab_key_checked(X11Connection, 1, X11Wid, data.mods | XCB_MOD_MASK_2, data.keyCode,
+                                 XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC))) {
+        free(error);
+    }
 
     Registered.insert(id, data);
+    return true;
 }
 
 void UGlobalHotkeys::unregLinuxHotkey(size_t id)
 {
+    if (!X11Connection) {
+        return;
+    }
+
     UHotkeyData data = Registered.take(id);
     xcb_ungrab_key(X11Connection, data.keyCode, X11Wid, data.mods);
     xcb_ungrab_key(X11Connection, data.keyCode, X11Wid, data.mods | XCB_MOD_MASK_2);
