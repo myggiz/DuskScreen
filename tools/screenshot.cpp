@@ -138,11 +138,6 @@ void Screenshot::confirm(bool result)
     mPixmap = QPixmap();
 }
 
-void Screenshot::confirmation()
-{
-    emit askConfirmation();
-}
-
 void Screenshot::discard()
 {
     confirm(false);
@@ -165,7 +160,7 @@ void Screenshot::optimize()
 #endif
 
     if (optiPNG.isEmpty() || !QFile::exists(optiPNG)) {
-        emit optimizationDone();
+        optimizationDone();
         process->deleteLater();
         return;
     }
@@ -173,7 +168,7 @@ void Screenshot::optimize()
     process->start(optiPNG, QStringList() << mOptions.fileName);
 
     if (process->state() == QProcess::NotRunning) {
-        emit optimizationDone();
+        optimizationDone();
         process->deleteLater();
     }
 }
@@ -260,9 +255,9 @@ void Screenshot::setPixmap(const QPixmap &pixmap)
     mPixmap = pixmap;
 
     if (mPixmap.isNull()) {
-        emit confirm(false);
+        confirm(false);
     } else {
-        confirmation();
+        confirm(true);
     }
 }
 
@@ -291,7 +286,7 @@ void Screenshot::take()
     }
 
     if (!mPixmap.isNull()) {
-        confirmation();
+        confirm(true);
         return;
     }
 

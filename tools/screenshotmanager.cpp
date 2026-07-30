@@ -48,11 +48,6 @@ bool ScreenshotManager::portableMode()
 
 //
 
-void ScreenshotManager::askConfirmation()
-{
-    Screenshot *s = qobject_cast<Screenshot *>(sender());
-    emit confirm(s);
-}
 
 void ScreenshotManager::cleanup()
 {
@@ -73,7 +68,6 @@ void ScreenshotManager::take(Screenshot::Options &options)
     Screenshot *newScreenshot = new Screenshot(this, options);
     mScreenshots.append(newScreenshot);
 
-    connect(newScreenshot, &Screenshot::askConfirmation, this, &ScreenshotManager::askConfirmation);
     connect(newScreenshot, &Screenshot::cleanup        , this, &ScreenshotManager::cleanup);
     connect(newScreenshot, &Screenshot::finished       , this, &ScreenshotManager::finished);
 

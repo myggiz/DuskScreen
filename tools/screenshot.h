@@ -98,7 +98,6 @@ public:
 
 public slots:
     void confirm(bool result = true);
-    void confirmation();
     void discard();
     void optimize();
     void optimizationDone();
@@ -108,7 +107,6 @@ public slots:
     void refresh();
 
 signals:
-    void askConfirmation();
     void cleanup();
     void finished();
 
