@@ -47,7 +47,7 @@ protected:
 #elif defined(Q_OS_LINUX)
     bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result);
     bool linuxEvent(xcb_generic_event_t *message);
-    void regLinuxHotkey(const UKeySequence &keySeq, size_t id);
+    bool regLinuxHotkey(const UKeySequence &keySeq, size_t id);
     void unregLinuxHotkey(size_t id);
 #endif
 
