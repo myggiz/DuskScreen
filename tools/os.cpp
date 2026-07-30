@@ -42,6 +42,8 @@
 #include <QMessageBox>
 #include <QPainter>
 #include <QPair>
+#include <QStringBuilder>
+#include <QDebug>
 
 #ifdef Q_OS_WIN
     #include <qt_windows.h>
@@ -327,7 +329,14 @@ void os::setForegroundWindow(QWidget *window)
 
 void os::setStartup(bool startup, bool hide)
 {
-    QString lightscreen = QDir::toNativeSeparators(qApp->applicationFilePath());
+    // The executable path is quoted before any argument is appended. Both
+    // consumers below parse this value as a command line, so an unquoted path
+    // containing spaces is ambiguous: on Windows that is the classic unquoted
+    // path hazard (a stray C:\Program.exe would be run instead), and in a
+    // .desktop file the Exec key requires quoting per the spec.
+    QString lightscreen = QLatin1Char('"')
+                          % QDir::toNativeSeparators(qApp->applicationFilePath())
+                          % QLatin1Char('"');
 
     if (hide) {
         lightscreen.append(" -h");
@@ -350,13 +359,27 @@ void os::setStartup(bool startup, bool hide)
 #endif
 
 #if defined(Q_OS_LINUX)
-    QFile desktopFile(QDir::homePath() + "/.config/autostart/duskscreen.desktop");
+    const QString autostartDir = QDir::homePath() + "/.config/autostart";
+    QFile desktopFile(autostartDir + "/duskscreen.desktop");
 
     desktopFile.remove();
 
     if (startup) {
-        desktopFile.open(QIODevice::WriteOnly);
-        desktopFile.write(QString("[Desktop Entry]\nExec=%1\nType=Application").arg(lightscreen).toLatin1());
+        // QFile won't create missing directories, and ~/.config/autostart often
+        // doesn't exist until something puts an entry there — so without this the
+        // open below simply failed and the setting appeared to do nothing.
+        if (!QDir().mkpath(autostartDir)) {
+            qWarning() << "Could not create the autostart directory:" << autostartDir;
+            return;
+        }
+
+        if (desktopFile.open(QIODevice::WriteOnly)) {
+            // UTF-8, not Latin-1: the spec requires it, and toLatin1() silently
+            // mangles any non-Latin-1 character in the install path.
+            desktopFile.write(QString("[Desktop Entry]\nExec=%1\nType=Application\n").arg(lightscreen).toUtf8());
+        } else {
+            qWarning() << "Could not write the autostart entry:" << desktopFile.fileName();
+        }
     }
 #endif
 }
