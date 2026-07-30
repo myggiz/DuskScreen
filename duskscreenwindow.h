@@ -58,7 +58,6 @@ public slots:
     void executeArgument(const QString &message);
     void executeArguments(const QStringList &arguments);
     void notify(const Screenshot::Result &result);
-    void preview(Screenshot *screenshot);
     void quit();
     void restoreNotification();
     void setStatus(QString status = "");
@@ -71,7 +70,6 @@ public slots:
     void toggleVisibility();
     void updateStatus();
     void updaterDone(bool available, const QString &version, const QString &url);
-    void windowHotkey();
     void windowPickerHotkey();
 
 private slots:
@@ -93,7 +91,6 @@ protected:
 private:
     bool mDoCache;
     bool mHideTrigger;
-    bool mReviveMain;
     bool mWasVisible;
     int  mLastMessage;
     QString mLastScreenshot;
@@ -103,35 +100,6 @@ private:
 
     QPointer<UGlobalHotkeys> mGlobalHotkeys;
 
-    bool mHasTaskbarButton;
-
-    // Qt 6 dropped QtWinExtras / QWinTaskbarButton. The taskbar progress overlay is a
-    // cosmetic Windows-shell feature we no longer ship; this no-op keeps the call sites
-    // compiling on every platform without scattering #ifdefs. mHasTaskbarButton stays
-    // false, so the dummy is never actually dereferenced.
-    class QWinTaskbarProgressDummy
-    {
-    public:
-        void setVisible(bool v) { Q_UNUSED(v) }
-        void setPaused(bool p)  { Q_UNUSED(p) }
-        void resume() {}
-        void stop() {}
-        void reset() {}
-        void setRange(int m, int m2)  { Q_UNUSED(m) Q_UNUSED(m2) }
-        void setValue(int v)  { Q_UNUSED(v) }
-
-    };
-
-    class QWinTaskbarDummy : public QObject
-    {
-    public:
-        void setOverlayIcon(QIcon i) { Q_UNUSED(i) }
-        void clearOverlayIcon() {}
-        QWinTaskbarProgressDummy *progress() { return 0; }
-        void setWindow(QWindow *w) { Q_UNUSED(w) }
-    };
-
-    QWinTaskbarDummy *mTaskbarButton = nullptr;
 };
 
 #endif // DUSKSCREENWINDOW_H

@@ -30,12 +30,6 @@ class ScreenshotManager : public QObject
     Q_OBJECT
 
 public:
-    enum State {
-        Idle  = 0,
-        Busy = 1,
-        Disabled  = 2
-    };
-    Q_ENUM(State)
 
     ScreenshotManager(QObject *parent = 0);
     static ScreenshotManager *instance();
@@ -45,13 +39,11 @@ public:
     QSettings *settings() const { return mSettings; }
 
 public slots:
-    void askConfirmation();
     void cleanup();
     void finished();
     void take(Screenshot::Options &options);
 
 signals:
-    void confirm(Screenshot *screenshot);
     void windowCleanup(const Screenshot::Options &options);
     void activeCountChange();
 

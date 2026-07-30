@@ -21,7 +21,6 @@
 #include <QDesktopServices>
 #include <QDialog>
 #include <QDir>
-#include <QGraphicsDropShadowEffect>
 #include <QGuiApplication>
 #include <QIcon>
 #include <QImage>
@@ -384,15 +383,6 @@ void os::setStartup(bool startup, bool hide)
 #endif
 }
 
-QGraphicsEffect *os::shadow(const QColor &color, int blurRadius, int offset)
-{
-    QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect;
-    shadowEffect->setBlurRadius(blurRadius);
-    shadowEffect->setOffset(offset);
-    shadowEffect->setColor(color);
-
-    return shadowEffect;
-}
 
 QIcon os::icon(const QString &name, QColor backgroundColor)
 {
