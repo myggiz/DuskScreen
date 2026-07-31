@@ -70,6 +70,10 @@ protected:
 
     QPoint limitPointToRect(const QPoint &p, const QRect &r) const;
 
+    // The area of the overlay actually affected by a selection change, so a drag
+    // doesn't repaint (and re-blit the desktop pixmap for) the whole screen.
+    QRegion dirtyRegionFor(const QRect &before, const QRect &after) const;
+
     Screenshot *mScreenshot;
     QPoint mDragStartPoint;
     bool mMouseDown;
