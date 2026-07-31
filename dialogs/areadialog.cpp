@@ -276,6 +276,9 @@ void AreaDialog::mouseMoveEvent(QMouseEvent *e)
     mMouseMagnifier = false;
 
     if (mMouseDown) {
+        const QRect selectionBefore = mSelection;
+        const QPoint mousePosBefore = mMousePos;
+
         mMousePos = e->pos();
 
         bool symmetryMod = qApp->keyboardModifiers() & Qt::ShiftModifier;
@@ -399,7 +402,16 @@ void AreaDialog::mouseMoveEvent(QMouseEvent *e)
             mAcceptWidget->move(acceptRect.x(), acceptRect.y());
         }
 
-        update();
+        QRegion dirty = dirtyRegionFor(selectionBefore, mSelection);
+
+        if (mLocalMagnify) {
+            // The magnifier follows the pointer, so both its old and new
+            // positions have to be repainted.
+            dirty += dirtyRegionFor(QRect(mousePosBefore, mousePosBefore),
+                                    QRect(mMousePos, mMousePos));
+        }
+
+        update(dirty);
     } else {
         if (mSelection.isNull()) {
             mMouseMagnifier = true;
@@ -777,6 +789,20 @@ QRegion AreaDialog::handleMask() const
     QRegion mask;
     foreach(QRect * rect, mHandles) mask += QRegion(*rect);
     return mask;
+}
+
+QRegion AreaDialog::dirtyRegionFor(const QRect &before, const QRect &after) const
+{
+    // Deliberately generous. What actually changes is the selection border, its
+    // handles, the size label drawn just outside the rectangle, and the
+    // magnifier — but the label and magnifier move around the selection
+    // depending on where it sits, so the margin covers the worst case rather
+    // than trying to predict which side they landed on. Even at this size it is
+    // a small fraction of a large desktop, where a full repaint re-blits the
+    // entire screenshot pixmap on every mouse move.
+    const int margin = mHandleSize + 320;
+
+    return QRegion(before.united(after).normalized().adjusted(-margin, -margin, margin, margin));
 }
 
 QPoint AreaDialog::limitPointToRect(const QPoint &p, const QRect &r) const
