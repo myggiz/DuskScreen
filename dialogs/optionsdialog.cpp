@@ -352,6 +352,15 @@ void OptionsDialog::saveSettings()
     settings()->endGroup();
 }
 
+void OptionsDialog::schedulePreviewUpdate()
+{
+    // Numeric naming resolves the next number by listing the target directory,
+    // so refreshing on every keystroke meant a full directory scan per
+    // character typed — seconds of stalling on a folder with thousands of
+    // screenshots. Coalesce into one refresh once typing pauses.
+    mPreviewTimer.start();
+}
+
 void OptionsDialog::updatePreview()
 {
     Screenshot::NamingOptions options;
@@ -524,6 +533,10 @@ void OptionsDialog::init()
     optionsButton->setMenu(optionsMenu);
     ui.buttonBox->addButton(optionsButton, QDialogButtonBox::ResetRole);
 
+    mPreviewTimer.setSingleShot(true);
+    mPreviewTimer.setInterval(250);
+    connect(&mPreviewTimer, &QTimer::timeout, this, &OptionsDialog::updatePreview);
+
     // Set up the autocomplete for the directory.
     QCompleter *completer = new QCompleter(this);
     QFileSystemModel *dirModel = new QFileSystemModel(completer);
@@ -551,7 +564,7 @@ void OptionsDialog::init()
     connect(ui.buttonBox, &QDialogButtonBox::accepted    , this, &OptionsDialog::accepted);
     connect(ui.namingOptionsButton, &QPushButton::clicked, this, &OptionsDialog::namingOptions);
 
-    connect(ui.prefixLineEdit, &QLineEdit::textEdited, this, &OptionsDialog::updatePreview);
+    connect(ui.prefixLineEdit, &QLineEdit::textEdited, this, &OptionsDialog::schedulePreviewUpdate);
     connect(ui.formatComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &OptionsDialog::updatePreview);
     connect(ui.namingComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &OptionsDialog::updatePreview);
 

@@ -20,6 +20,7 @@
 #define OPTIONSDIALOG_H
 
 #include <QDialog>
+#include <QTimer>
 #include <updater/updater.h>
 #include "ui_optionsdialog.h"
 
@@ -42,6 +43,7 @@ public slots:
     void restoreDefaults();
     void saveSettings();
     void updatePreview();
+    void schedulePreviewUpdate();
 
 protected:
     bool event(QEvent *event);
@@ -63,6 +65,9 @@ private:
 
 private:
     Ui::OptionsDialog ui;
+
+    // Coalesces preview refreshes: each one lists the whole screenshot folder.
+    QTimer mPreviewTimer;
 };
 
 #endif // OPTIONSDIALOG_H
