@@ -38,6 +38,9 @@ CONFIG += c++17
 
 QT += core gui widgets network multimedia
 
+# Upstream SingleApplication defaults to QCoreApplication; DuskScreen is a
+# widgets app, so it has to derive from QApplication or every QWidget fails.
+DEFINES += QAPPLICATION_CLASS=QApplication
 include($$PWD/tools/SingleApplication/singleapplication.pri)
 include($$PWD/tools/UGlobalHotkey/uglobalhotkey.pri)
 
