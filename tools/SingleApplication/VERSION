@@ -1,0 +1,6 @@
+itay-grudev/SingleApplication v3.5.6
+https://github.com/itay-grudev/SingleApplication/releases/tag/v3.5.6
+
+Vendored unmodified. Update by replacing these files from a released tag;
+do not patch them locally. Anything DuskScreen needs on top belongs in
+main.cpp, which is the only consumer.

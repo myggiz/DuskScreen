@@ -19,6 +19,8 @@
 #include <QApplication>
 #include <QLocale>
 #include <QTimer>
+#include <QDataStream>
+#include <QByteArray>
 
 #include <tools/os.h>
 #include "tools/SingleApplication/singleapplication.h"
@@ -35,19 +37,35 @@ int main(int argc, char *argv[])
     QApplication::setApplicationName("DuskScreen");
     QApplication::setApplicationVersion(APP_VERSION);
 
-    SingleApplication application(argc, argv);
+    // allowSecondary so the constructor returns in a second instance instead of
+    // exiting inside itself, which is what lets the arguments be forwarded below.
+    SingleApplication application(argc, argv, true);
 
-    application.setQuitOnLastWindowClosed(false);
+    if (application.isSecondary()) {
+        // Hand our command line to the running instance and get out of the way.
+        // Upstream has no equivalent of the old fork's instanceArguments signal,
+        // so the arguments travel as an explicit message.
+        QByteArray payload;
+        QDataStream stream(&payload, QIODevice::WriteOnly);
+
+        stream.setVersion(QDataStream::Qt_6_0);
+        stream << QApplication::arguments();
+
+        application.sendMessage(payload);
+        return 0;
+    }
+
+    QApplication::setQuitOnLastWindowClosed(false);
 
     DuskScreenWindow lightscreen;
 
-    if (application.arguments().size() > 1) {
+    if (QApplication::arguments().size() > 1) {
         // Deferred until exec() is running. QCoreApplication::quit() does nothing
         // when there is no event loop, so dispatching here directly meant that
         // "--quit" on an instance that wasn't already running *started* the
         // application instead of stopping it. The forwarded-argument path from a
         // second instance always ran inside the loop and was unaffected.
-        const QStringList arguments = application.arguments();
+        const QStringList arguments = QApplication::arguments();
 
         QTimer::singleShot(0, &lightscreen, [&lightscreen, arguments] {
             lightscreen.executeArguments(arguments);
@@ -56,7 +74,19 @@ int main(int argc, char *argv[])
         lightscreen.show();
     }
 
-    QObject::connect(&application, &SingleApplication::instanceArguments, &lightscreen, &DuskScreenWindow::executeArguments);
+    QObject::connect(&application, &SingleApplication::receivedMessage, &lightscreen,
+    [&lightscreen](quint32, const QByteArray & message) {
+        QStringList arguments;
+        QDataStream stream(message);
+
+        stream.setVersion(QDataStream::Qt_6_0);
+        stream >> arguments;
+
+        if (stream.status() == QDataStream::Ok && !arguments.isEmpty()) {
+            lightscreen.executeArguments(arguments);
+        }
+    });
+
     QObject::connect(&lightscreen, &DuskScreenWindow::finished, &application, &SingleApplication::quit);
 
     return application.exec();
