@@ -23,6 +23,8 @@
 #include <QGuiApplication>
 #include <QPainter>
 #include <QPixmap>
+#include <QtConcurrent>
+#include <QFutureWatcher>
 #include <QProcess>
 #include <QStandardPaths>
 #include <QTextStream>
@@ -127,12 +129,14 @@ QPixmap &Screenshot::pixmap()
 void Screenshot::confirm(bool result)
 {
     if (result) {
+        // save() may finish on another thread; it emits cleanup() itself once
+        // the result is known, so nothing may follow it here.
         save();
-    } else {
-        mOptions.result = Screenshot::Cancel;
-        emit finished();
+        return;
     }
 
+    mOptions.result = Screenshot::Cancel;
+    emit finished();
     emit cleanup();
 
     mPixmap = QPixmap();
@@ -221,33 +225,83 @@ void Screenshot::save()
         }
     }
 
-    if (mOptions.file) {
-        if (name.isEmpty()) {
-            // Save As dismissed: leave fileName empty rather than reporting a
-            // bare ".png", which the optimize step below would then run on.
-            result = Screenshot::Cancel;
-        } else {
-            fileName = name % extension();
-            result = mPixmap.save(fileName, nullptr, mOptions.quality) ? Screenshot::Success
-                                                                 : Screenshot::Failure;
-        }
+    if (!mOptions.file) {
+        saveFinished(result, fileName);
+        return;
     }
 
+    if (name.isEmpty()) {
+        // Save As dismissed: leave fileName empty rather than reporting a
+        // bare ".png", which the optimize step below would then run on.
+        saveFinished(Screenshot::Cancel, fileName);
+        return;
+    }
+
+    fileName = name % extension();
+
+    // Claim the name before handing the encode off. The duplicate-name probe
+    // above only sees files that exist, and encoding no longer creates the file
+    // before the next capture resolves its own name — so without this, every
+    // capture started inside one encode window picks the same name and they
+    // overwrite each other. Creating it empty is enough: the probe and the
+    // numeric scan both work on existence.
+    QFile reservation(fileName);
+
+    if (!reservation.open(QIODevice::WriteOnly)) {
+        saveFinished(Screenshot::Failure, fileName);
+        return;
+    }
+
+    reservation.close();
+
+    // Encoding a full-desktop capture costs tens of milliseconds and used to
+    // run here, on the UI thread, freezing the application until it finished.
+    // QImage rather than QPixmap because a pixmap may not be touched outside
+    // the GUI thread; both share their data, so this is not an extra copy of
+    // the image — QPixmap::save() converts internally anyway.
+    const QImage image = mPixmap.toImage();
+    const int quality = mOptions.quality;
+
+    auto *watcher = new QFutureWatcher<bool>(this);
+
+    connect(watcher, &QFutureWatcher<bool>::finished, this, [this, watcher, fileName]() {
+        const bool ok = watcher->result();
+        watcher->deleteLater();
+        saveFinished(ok ? Screenshot::Success : Screenshot::Failure, fileName);
+    });
+
+    watcher->setFuture(QtConcurrent::run([image, fileName, quality]() {
+        return image.save(fileName, nullptr, quality);
+    }));
+}
+
+void Screenshot::saveFinished(Result result, const QString &fileName)
+{
     mOptions.fileName = fileName;
     mOptions.result   = result;
 
     if (!mOptions.result) {
+        // Take the reserved name back out of the way, so a failed capture does
+        // not leave an empty file behind holding a number.
+        if (!fileName.isEmpty()) {
+            QFile::remove(fileName);
+        }
+
         // Failure: finish here. Falling through emitted finished() a second
         // time, or started optimize() on a file that was never written.
         emit finished();
-        return;
-    }
-
-    if (mOptions.format == Screenshot::PNG && mOptions.optimize && mOptions.file) {
+    } else if (mOptions.format == Screenshot::PNG && mOptions.optimize && mOptions.file) {
         optimize();
     } else {
         emit finished();
     }
+
+    // Deferred until the result is known: the window restore and the
+    // notification both read options.result, and the notification names the
+    // file that was written.
+    emit cleanup();
+
+    mPixmap = QPixmap();
 }
 
 void Screenshot::setPixmap(const QPixmap &pixmap)

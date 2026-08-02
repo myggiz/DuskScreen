@@ -36,7 +36,7 @@ CODECFORSRC = UTF-8
 INCLUDEPATH += $$PWD
 CONFIG += c++17
 
-QT += core gui widgets network multimedia
+QT += core gui widgets network multimedia concurrent
 
 # Upstream SingleApplication defaults to QCoreApplication; DuskScreen is a
 # widgets app, so it has to derive from QApplication or every QWidget fails.
