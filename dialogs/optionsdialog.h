@@ -39,7 +39,7 @@ public slots:
     void exportSettings();
     void importSettings();
     void loadSettings();
-    void openUrl(QString url);
+    void openUrl(const QString &url);
     void restoreDefaults();
     void saveSettings();
     void updatePreview();

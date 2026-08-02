@@ -331,7 +331,7 @@ void DuskScreenWindow::executeArguments(const QStringList &arguments)
         return;
     }
 
-    for (auto argument : arguments) {
+    for (const auto &argument : arguments) {
         executeArgument(argument);
     }
 }
@@ -511,7 +511,7 @@ void DuskScreenWindow::showHotkeyError(const QStringList &hotkeys)
     if (hotkeys.size() > 1) {
         messageText += tr("<br>The failed hotkeys are the following:") + "<ul>";
 
-        for (auto hotkey : hotkeys) {
+        for (const auto &hotkey : hotkeys) {
             messageText += QString("%1%2%3").arg("<li><b>").arg(hotkey).arg("</b></li>");
         }
 
@@ -538,7 +538,7 @@ void DuskScreenWindow::showHotkeyError(const QStringList &hotkeys)
     } else if (msgBox.clickedButton() == changeButton) {
         showOptions();
     } else if (msgBox.clickedButton() == disableButton) {
-        for (auto hotkey : hotkeys) {
+        for (const auto &hotkey : hotkeys) {
             settings()->setValue(QString("actions/%1/enabled").arg(hotkey), false);
         }
     }
@@ -676,7 +676,7 @@ void DuskScreenWindow::connectHotkeys()
     QStringList failed;
     size_t id = Screenshot::WholeScreen;
 
-    for (auto action : actions) {
+    for (const auto &action : actions) {
         if (settings()->value("actions/" + action + "/enabled").toBool()) {
             if (!mGlobalHotkeys->registerHotkey(settings()->value("actions/" + action + "/hotkey").toString(), id)) {
                 failed << action;

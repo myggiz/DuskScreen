@@ -58,7 +58,7 @@ const long kMaxIconElements = 1024 * 1024;
 const unsigned long kMaxIconEdge = 4096;
 #endif
 
-WindowPicker::WindowPicker() : QWidget(nullptr), mCrosshair(":/icons/picker"), mWindowLabel(Q_NULLPTR), mCurrentWindow(0), mTaken(false)
+WindowPicker::WindowPicker() : QWidget(nullptr), mCrosshair(":/icons/picker"), mWindowLabel(nullptr), mCurrentWindow(0), mTaken(false)
 {
 #if defined(Q_OS_WIN)
     setWindowFlags(Qt::SplashScreen | Qt::WindowStaysOnTopHint);
@@ -230,11 +230,11 @@ void WindowPicker::mouseMoveEvent(QMouseEvent *event)
     char **text;
     int count;
 
-    if (XGetTextProperty(x11Display(), cWindow, &tp, XA_WM_NAME) != 0 && tp.value != NULL) {
+    if (XGetTextProperty(x11Display(), cWindow, &tp, XA_WM_NAME) != 0 && tp.value != nullptr) {
         if (tp.encoding == XA_STRING) {
             windowName = QString::fromLocal8Bit((const char *) tp.value);
         } else if (XmbTextPropertyToTextList(x11Display(), &tp, &text, &count) == Success &&
-                   text != NULL && count > 0) {
+                   text != nullptr && count > 0) {
             windowName = QString::fromLocal8Bit(text[0]);
             XFreeStringList(text);
         }

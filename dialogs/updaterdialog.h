@@ -32,7 +32,7 @@ public slots:
     void updateDone(bool available, const QString &version, const QString &url);
 
 private slots:
-    void link(QString url);
+    void link(const QString &url);
 
 };
 

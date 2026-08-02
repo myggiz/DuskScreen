@@ -423,7 +423,7 @@ Window os::findRealWindow(Window w, int depth)
 
     if (XGetWindowProperty(x11Display(), w, wm_state, 0, 0, False, AnyPropertyType,
                            &type, &format, &nitems, &after, &prop) == Success) {
-        if (prop != NULL) {
+        if (prop != nullptr) {
             XFree(prop);
         }
 
@@ -444,7 +444,7 @@ Window os::findRealWindow(Window w, int depth)
             ret = os::findRealWindow(children[ i ], depth + 1);
         }
 
-        if (children != NULL) {
+        if (children != nullptr) {
             XFree(children);
         }
     }

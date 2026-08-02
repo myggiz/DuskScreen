@@ -50,7 +50,7 @@
 
 Screenshot::Screenshot(QObject *parent, Screenshot::Options options):
     QObject(parent),
-    mOptions(options),
+    mOptions(std::move(options)),
     mPixmapDelay(false),
     mCancelled(false)
 {
