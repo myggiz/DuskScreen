@@ -36,8 +36,13 @@ published build:
 Get-FileHash .\DuskScreen-1.0.10-win64.zip -Algorithm SHA256
 ```
 
-The source is all here, and the binaries are never packed or obfuscated. See
-[#11](https://github.com/myggiz/DuskScreen/issues/11) for the code-signing plan.
+The source is all here, and the binaries are never packed or obfuscated. Verifying
+the checksum is the intended way to confirm a download is genuine.
+
+DuskScreen is not code-signed and there are no plans to sign it. Signing would not
+remove these warnings on its own — a newly signed application still has no
+reputation — and the cost is hard to justify for a free tool. See
+[#11](https://github.com/myggiz/DuskScreen/issues/11) for the reasoning.
 
 ## Building
 
