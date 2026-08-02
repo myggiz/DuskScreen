@@ -150,7 +150,7 @@ void AreaDialog::keyboardResize()
     if (mKeyboardSize.contains("x")) {
         auto sizeList = mKeyboardSize.split("x");
 
-        if (sizeList.count() == 2) {
+        if (sizeList.size() == 2) {
             bool okw = false, okh = false;
 
             QSize size(sizeList.at(0).toInt(&okw), sizeList.at(1).toInt(&okh));
@@ -420,7 +420,7 @@ void AreaDialog::mouseMoveEvent(QMouseEvent *e)
         }
 
         bool found = false;
-        foreach (QRect *r, mHandles) {
+        for (QRect *r : std::as_const(mHandles)) {
             if (r->contains(e->pos())) {
                 mMouseOverHandle = r;
                 found = true;
@@ -787,7 +787,9 @@ QRegion AreaDialog::handleMask() const
 {
     // note: not normalized QRects are bad here, since they will not be drawn
     QRegion mask;
-    foreach(QRect * rect, mHandles) mask += QRegion(*rect);
+    for (const QRect *rect : mHandles) {
+        mask += QRegion(*rect);
+    }
     return mask;
 }
 

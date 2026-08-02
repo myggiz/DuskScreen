@@ -326,7 +326,7 @@ void DuskScreenWindow::executeArgument(const QString &message)
 void DuskScreenWindow::executeArguments(const QStringList &arguments)
 {
     // If we just have the default argument, call "--wake"
-    if (arguments.count() == 1 && (arguments.at(0) == qApp->arguments().at(0) || arguments.at(0).contains(QFileInfo(qApp->applicationFilePath()).fileName()))) {
+    if (arguments.size() == 1 && (arguments.at(0) == qApp->arguments().at(0) || arguments.at(0).contains(QFileInfo(qApp->applicationFilePath()).fileName()))) {
         executeArgument("--wake");
         return;
     }
@@ -508,7 +508,7 @@ void DuskScreenWindow::showHotkeyError(const QStringList &hotkeys)
 
     messageText = tr("Some hotkeys could not be registered, they might already be in use");
 
-    if (hotkeys.count() > 1) {
+    if (hotkeys.size() > 1) {
         messageText += tr("<br>The failed hotkeys are the following:") + "<ul>";
 
         for (auto hotkey : hotkeys) {

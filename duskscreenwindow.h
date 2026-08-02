@@ -37,7 +37,7 @@ class DuskScreenWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    enum Action {
+    enum Action : int {
         ShowMainWindow = 5,
         OpenScreenshotFolder = 6
     };

@@ -38,7 +38,7 @@ ScreenshotManager::ScreenshotManager(QObject *parent) : QObject(parent)
 
 int ScreenshotManager::activeCount() const
 {
-    return mScreenshots.count();
+    return mScreenshots.size();
 }
 
 bool ScreenshotManager::portableMode()
