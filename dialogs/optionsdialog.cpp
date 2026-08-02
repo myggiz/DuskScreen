@@ -190,7 +190,7 @@ void OptionsDialog::loadSettings()
     flipToggled(settings()->value("flip", false).toBool());
     ui.trayCheckBox->setChecked(settings()->value("tray", true).toBool());
     ui.messageCheckBox->setChecked(settings()->value("message", true).toBool());
-    ui.qualitySlider->setValue(settings()->value("quality", 100).toInt());
+    ui.qualitySlider->setValue(settings()->value("quality", 90).toInt());
     ui.playSoundCheckBox->setChecked(settings()->value("playSound", false).toBool());
     ui.updaterCheckBox->setChecked(!settings()->value("disableUpdater", false).toBool());
     ui.magnifyCheckBox->setChecked(settings()->value("magnify", false).toBool());

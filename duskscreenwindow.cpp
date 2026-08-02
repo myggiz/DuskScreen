@@ -459,7 +459,7 @@ void DuskScreenWindow::screenshotAction(Screenshot::Mode mode, bool delayed)
 
         options.directory      = dir;
 
-        options.quality        = settings()->value("options/quality", 100).toInt();
+        options.quality        = settings()->value("options/quality", 90).toInt();
         options.currentMonitor = settings()->value("options/currentMonitor", false).toBool();
         options.clipboard      = settings()->value("options/clipboard",      true).toBool();
         options.magnify        = settings()->value("options/magnify",        false).toBool();
