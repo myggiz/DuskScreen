@@ -182,10 +182,10 @@ void WindowPicker::mouseMoveEvent(QMouseEvent *event)
     }
 
     // Text
-    WCHAR str[60];
+    WCHAR str[256];
     HICON icon;
 
-    ::GetWindowText((HWND)mCurrentWindow, str, 60);
+    ::GetWindowText((HWND)mCurrentWindow, str, 256);
     windowName = QString::fromWCharArray(str);
     ///
 
@@ -319,23 +319,21 @@ void WindowPicker::mouseMoveEvent(QMouseEvent *event)
 
 #endif
 
-    QString windowText;
-
-    if (mWindowIcon->pixmap().isNull()) {
-        windowText = QString(" - %1").arg(windowName);
-    } else {
-        windowText = windowName;
-    }
-
-    if (windowText == " - ") {
+    if (windowName.isEmpty()) {
         mWindowLabel->setText("");
         return;
     }
 
-    if (windowText.length() == 62) {
-        mWindowLabel->setText(windowText + "...");
+    const int maxTitleLength = 60;
+
+    if (windowName.length() > maxTitleLength) {
+        windowName = windowName.left(maxTitleLength) + "...";
+    }
+
+    if (mWindowIcon->pixmap().isNull()) {
+        mWindowLabel->setText(QString(" - %1").arg(windowName));
     } else {
-        mWindowLabel->setText(windowText);
+        mWindowLabel->setText(windowName);
     }
 }
 
