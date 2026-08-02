@@ -28,7 +28,7 @@ class Screenshot : public QObject
     Q_OBJECT
 
 public:
-    enum Format {
+    enum Format : int {
         PNG  = 0,
         JPEG = 1,
         BMP  = 2,
@@ -36,7 +36,7 @@ public:
     };
     Q_ENUM(Format)
 
-    enum Naming {
+    enum Naming : int {
         Numeric = 0,
         Date = 1,
         Timestamp = 2,
@@ -44,7 +44,7 @@ public:
     };
     Q_ENUM(Naming)
 
-    enum Mode {
+    enum Mode : int {
         None         = 0,
         WholeScreen  = 1,
         ActiveWindow = 2,
@@ -53,7 +53,7 @@ public:
     };
     Q_ENUM(Mode)
 
-    enum Result {
+    enum Result : int {
         Failure = 0,
         Success = 1,
         Cancel = 2

@@ -58,7 +58,7 @@ const long kMaxIconElements = 1024 * 1024;
 const unsigned long kMaxIconEdge = 4096;
 #endif
 
-WindowPicker::WindowPicker() : QWidget(0), mCrosshair(":/icons/picker"), mWindowLabel(Q_NULLPTR), mCurrentWindow(0), mTaken(false)
+WindowPicker::WindowPicker() : QWidget(nullptr), mCrosshair(":/icons/picker"), mWindowLabel(nullptr), mCurrentWindow(0), mTaken(false)
 {
 #if defined(Q_OS_WIN)
     setWindowFlags(Qt::SplashScreen | Qt::WindowStaysOnTopHint);
@@ -182,10 +182,10 @@ void WindowPicker::mouseMoveEvent(QMouseEvent *event)
     }
 
     // Text
-    WCHAR str[60];
+    WCHAR str[256];
     HICON icon;
 
-    ::GetWindowText((HWND)mCurrentWindow, str, 60);
+    ::GetWindowText((HWND)mCurrentWindow, str, 256);
     windowName = QString::fromWCharArray(str);
     ///
 
@@ -230,11 +230,11 @@ void WindowPicker::mouseMoveEvent(QMouseEvent *event)
     char **text;
     int count;
 
-    if (XGetTextProperty(x11Display(), cWindow, &tp, XA_WM_NAME) != 0 && tp.value != NULL) {
+    if (XGetTextProperty(x11Display(), cWindow, &tp, XA_WM_NAME) != 0 && tp.value != nullptr) {
         if (tp.encoding == XA_STRING) {
             windowName = QString::fromLocal8Bit((const char *) tp.value);
         } else if (XmbTextPropertyToTextList(x11Display(), &tp, &text, &count) == Success &&
-                   text != NULL && count > 0) {
+                   text != nullptr && count > 0) {
             windowName = QString::fromLocal8Bit(text[0]);
             XFreeStringList(text);
         }
@@ -319,23 +319,21 @@ void WindowPicker::mouseMoveEvent(QMouseEvent *event)
 
 #endif
 
-    QString windowText;
-
-    if (mWindowIcon->pixmap().isNull()) {
-        windowText = QString(" - %1").arg(windowName);
-    } else {
-        windowText = windowName;
-    }
-
-    if (windowText == " - ") {
+    if (windowName.isEmpty()) {
         mWindowLabel->setText("");
         return;
     }
 
-    if (windowText.length() == 62) {
-        mWindowLabel->setText(windowText + "...");
+    const int maxTitleLength = 60;
+
+    if (windowName.length() > maxTitleLength) {
+        windowName = windowName.left(maxTitleLength) + "...";
+    }
+
+    if (mWindowIcon->pixmap().isNull()) {
+        mWindowLabel->setText(QString(" - %1").arg(windowName));
     } else {
-        mWindowLabel->setText(windowText);
+        mWindowLabel->setText(windowName);
     }
 }
 

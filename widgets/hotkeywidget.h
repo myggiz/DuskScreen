@@ -26,7 +26,7 @@ class HotkeyWidget : public QPushButton
     Q_OBJECT
 
 public:
-    HotkeyWidget(QWidget *parent = 0);
+    HotkeyWidget(QWidget *parent = nullptr);
 
     void setHotkey(const QString &hotkey);
     QString hotkey() const;
@@ -43,8 +43,8 @@ private slots:
 
 protected:
     // Event overrides:
-    bool event(QEvent *event);
-    void keyPressEvent(QKeyEvent *event);
+    bool event(QEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
 private:
     QKeySequence mHotkey;

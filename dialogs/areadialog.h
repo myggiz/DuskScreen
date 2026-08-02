@@ -56,14 +56,14 @@ signals:
     void regionGrabbed(const QPixmap &);
 
 protected:
-    void keyPressEvent(QKeyEvent *e);
-    void mouseDoubleClickEvent(QMouseEvent *);
-    void mouseMoveEvent(QMouseEvent *e);
-    void mousePressEvent(QMouseEvent *e);
-    void mouseReleaseEvent(QMouseEvent *e);
-    void paintEvent(QPaintEvent *e);
-    void resizeEvent(QResizeEvent *e);
-    void showEvent(QShowEvent *e);
+    void keyPressEvent(QKeyEvent *e) override;
+    void mouseDoubleClickEvent(QMouseEvent *) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
+    void paintEvent(QPaintEvent *e) override;
+    void resizeEvent(QResizeEvent *e) override;
+    void showEvent(QShowEvent *e) override;
 
     void updateHandles();
     QRegion handleMask() const;

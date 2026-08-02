@@ -33,7 +33,7 @@ class UGLOBALHOTKEY_EXPORT UGlobalHotkeys : public QWidget
     Q_OBJECT
 
 public:
-    explicit UGlobalHotkeys(QWidget *parent = 0);
+    explicit UGlobalHotkeys(QWidget *parent = nullptr);
     bool registerHotkey(const QString &keySeq, size_t id = 1);
     bool registerHotkey(const UKeySequence &keySeq, size_t id = 1);
     void unregisterHotkey(size_t id = 1);
@@ -45,7 +45,7 @@ protected:
     bool winEvent(MSG *message, qintptr *result);
     bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result);
 #elif defined(Q_OS_LINUX)
-    bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result);
+    bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result) override;
     bool linuxEvent(xcb_generic_event_t *message);
     bool regLinuxHotkey(const UKeySequence &keySeq, size_t id);
     void unregLinuxHotkey(size_t id);

@@ -123,7 +123,7 @@ void OptionsDialog::exportSettings()
 
     QSettings exportedSettings(exportFileName, QSettings::IniFormat);
 
-    for (auto key : settings()->allKeys()) {
+    for (const auto &key : settings()->allKeys()) {
         exportedSettings.setValue(key, settings()->value(key));
     }
 }
@@ -143,7 +143,7 @@ void OptionsDialog::importSettings()
 
     saveSettings();
 
-    for (auto key : importedSettings.allKeys()) {
+    for (const auto &key : importedSettings.allKeys()) {
         if (settings()->contains(key)) {
             settings()->setValue(key, importedSettings.value(key));
         }
@@ -275,7 +275,7 @@ void OptionsDialog::loadSettings()
     setUpdatesEnabled(true);
 }
 
-void OptionsDialog::openUrl(QString url)
+void OptionsDialog::openUrl(const QString &url)
 {
     if (url == "#aboutqt") {
         qApp->aboutQt();

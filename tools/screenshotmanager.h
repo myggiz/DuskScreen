@@ -31,7 +31,7 @@ class ScreenshotManager : public QObject
 
 public:
 
-    ScreenshotManager(QObject *parent = 0);
+    ScreenshotManager(QObject *parent = nullptr);
     static ScreenshotManager *instance();
 
     int activeCount() const;

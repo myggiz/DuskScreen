@@ -36,10 +36,10 @@ signals:
     void pixmap(const QPixmap &pixmap);
 
 protected:
-    void closeEvent(QCloseEvent *);
-    void mouseMoveEvent(QMouseEvent *event);
-    void mousePressEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
+    void closeEvent(QCloseEvent *) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
     void cancel();

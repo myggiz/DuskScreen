@@ -37,8 +37,8 @@ namespace os {
 // Returns the cursor pixmap in Windows
 QPair<QPixmap, QPoint> cursor();
 
-// A QTimeLine based effect for a slot (TODO: look at the new effect classes)
-void effect(QObject *target, const char *slot, int frames, int duration = 400, const char *cleanup = 0);
+// A QTimeLine based effect for a slot.
+void effect(QObject *target, const char *slot, int frames, int duration = 400);
 
 // Returns the current users's Documents/My Documents folder
 QString getDocumentsPath();

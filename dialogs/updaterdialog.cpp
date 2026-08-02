@@ -57,7 +57,7 @@ void UpdaterDialog::updateDone(bool available, const QString &version, const QSt
     setCancelButtonText(tr("Close"));
 }
 
-void UpdaterDialog::link(QString url)
+void UpdaterDialog::link(const QString &url)
 {
     QDesktopServices::openUrl(url);
 }

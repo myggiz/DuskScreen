@@ -37,13 +37,13 @@ class DuskScreenWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    enum Action {
+    enum Action : int {
         ShowMainWindow = 5,
         OpenScreenshotFolder = 6
     };
     Q_ENUM(Action)
 
-    DuskScreenWindow(QWidget *parent = 0);
+    DuskScreenWindow(QWidget *parent = nullptr);
     ~DuskScreenWindow();
 
 public slots:
@@ -86,7 +86,7 @@ private:
     QSettings *settings() const;
 
 protected:
-    bool event(QEvent *event);
+    bool event(QEvent *event) override;
 
 private:
     bool mDoCache;

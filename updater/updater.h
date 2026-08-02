@@ -26,7 +26,7 @@ class Updater : public QObject
 {
     Q_OBJECT
 public:
-    Updater(QObject *parent = 0);
+    Updater(QObject *parent = nullptr);
 
 signals:
     // version and url are only meaningful when available is true; both are
