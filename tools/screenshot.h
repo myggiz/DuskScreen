@@ -112,6 +112,9 @@ signals:
 
 private:
     void activeWindow();
+    // Completes the save once the result is known — immediately for the paths
+    // that never touch the disk, or from the encoding thread's completion.
+    void saveFinished(Result result, const QString &fileName);
     const QString extension() const;
     // Area mode passes false: the cursor would be stamped into the background at
     // the position it had when the capture was triggered, not where the selection
