@@ -1,0 +1,16 @@
+itay-grudev/SingleApplication v3.5.6
+https://github.com/itay-grudev/SingleApplication/releases/tag/v3.5.6
+
+Vendored unmodified. Update by replacing these files from a released tag;
+do not patch them locally. Anything DuskScreen needs on top belongs in
+main.cpp, which is the only consumer.
+
+This file was called VERSION and that broke the Windows build. The
+directory is on the include path, Windows filenames are case-insensitive,
+so `#include <version>` — a real C++ header that Qt pulls in nearly
+everywhere — found this text and tried to compile it. Linux never noticed.
+
+So: when adding a file here, do not give it a name that matches a standard
+header under case folding. VERSION, NEW, ANY, LIST, MAP, SET, ALGORITHM,
+COMPLEX, FORMAT, RANDOM, RANGES, SPAN, STRING, THREAD, TUPLE, UTILITY and
+VECTOR are all taken.
