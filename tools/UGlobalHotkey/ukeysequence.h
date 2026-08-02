@@ -13,8 +13,8 @@ class UGLOBALHOTKEY_EXPORT UKeySequence : public QObject
     Q_OBJECT
 
 public:
-    explicit UKeySequence(QObject *parent = 0);
-    explicit UKeySequence(const QString &str, QObject *parent = 0);
+    explicit UKeySequence(QObject *parent = nullptr);
+    explicit UKeySequence(const QString &str, QObject *parent = nullptr);
 
     void fromString(const QString &str);
     QString toString();

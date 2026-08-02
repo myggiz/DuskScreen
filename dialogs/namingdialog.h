@@ -29,10 +29,10 @@ class NamingDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit NamingDialog(Screenshot::Naming naming, QWidget *parent = 0);
+    explicit NamingDialog(Screenshot::Naming naming, QWidget *parent = nullptr);
 
 protected:
-    bool eventFilter(QObject *object, QEvent *event);
+    bool eventFilter(QObject *object, QEvent *event) override;
 
 public slots:
     void saveSettings();

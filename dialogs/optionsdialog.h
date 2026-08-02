@@ -31,7 +31,7 @@ class OptionsDialog : public QDialog
     Q_OBJECT
 
 public:
-    OptionsDialog(QWidget *parent = 0);
+    OptionsDialog(QWidget *parent = nullptr);
 
 public slots:
     void accepted();
@@ -46,7 +46,7 @@ public slots:
     void schedulePreviewUpdate();
 
 protected:
-    bool event(QEvent *event);
+    bool event(QEvent *event) override;
 
 #ifdef Q_OS_WIN
     bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result);

@@ -187,7 +187,7 @@ void Screenshot::save()
     if (mOptions.file && !mOptions.saveAs)  {
         name = newFileName();
     } else if (mOptions.file && mOptions.saveAs) {
-        name = QFileDialog::getSaveFileName(0, tr("Save as.."), newFileName(), "*" % extension());
+        name = QFileDialog::getSaveFileName(nullptr, tr("Save as.."), newFileName(), "*" % extension());
 
         // The native dialog appends the filter's extension to the suggested
         // (extension-less) name. Everything below works on a bare name — the
@@ -228,7 +228,7 @@ void Screenshot::save()
             result = Screenshot::Cancel;
         } else {
             fileName = name % extension();
-            result = mPixmap.save(fileName, 0, mOptions.quality) ? Screenshot::Success
+            result = mPixmap.save(fileName, nullptr, mOptions.quality) ? Screenshot::Success
                                                                  : Screenshot::Failure;
         }
     }

@@ -58,7 +58,7 @@ const long kMaxIconElements = 1024 * 1024;
 const unsigned long kMaxIconEdge = 4096;
 #endif
 
-WindowPicker::WindowPicker() : QWidget(0), mCrosshair(":/icons/picker"), mWindowLabel(Q_NULLPTR), mCurrentWindow(0), mTaken(false)
+WindowPicker::WindowPicker() : QWidget(nullptr), mCrosshair(":/icons/picker"), mWindowLabel(Q_NULLPTR), mCurrentWindow(0), mTaken(false)
 {
 #if defined(Q_OS_WIN)
     setWindowFlags(Qt::SplashScreen | Qt::WindowStaysOnTopHint);

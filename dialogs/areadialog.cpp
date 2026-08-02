@@ -38,8 +38,8 @@
 #include <QToolTip>
 
 AreaDialog::AreaDialog(Screenshot *screenshot) :
-    QDialog(0), mScreenshot(screenshot), mMouseDown(false), mMouseMagnifier(false),
-    mNewSelection(false), mHandleSize(10), mMouseOverHandle(0),
+    QDialog(nullptr), mScreenshot(screenshot), mMouseDown(false), mMouseMagnifier(false),
+    mNewSelection(false), mHandleSize(10), mMouseOverHandle(nullptr),
     mShowHelp(true), mGrabbing(false), mOverlayAlpha(1), mAutoclose(false), mLocalMagnify(screenshot->options().magnify),
     mRefreshing(false),
     mTLHandle(0, 0, mHandleSize, mHandleSize), mTRHandle(0, 0, mHandleSize, mHandleSize),
@@ -50,7 +50,7 @@ AreaDialog::AreaDialog(Screenshot *screenshot) :
     mHandles << &mTLHandle << &mTRHandle << &mBLHandle << &mBRHandle
              << &mLHandle << &mTHandle << &mRHandle << &mBHandle;
 
-    mMouseOverHandle = 0;
+    mMouseOverHandle = nullptr;
 
     setMouseTracking(true);
     setWindowTitle(tr("DuskScreen Area Mode"));
@@ -291,7 +291,7 @@ void AreaDialog::mouseMoveEvent(QMouseEvent *e)
                 // This is kinda wiggly but oh well
                 mSelection.setHeight(mSelection.width());
             }
-        } else if (mMouseOverHandle == 0) {
+        } else if (mMouseOverHandle == nullptr) {
             // Moving the whole selection
             QRect r = rect().normalized(), s = mSelectionBeforeDrag.normalized();
             QPoint p = s.topLeft() + e->pos() - mDragStartPoint;
@@ -429,7 +429,7 @@ void AreaDialog::mouseMoveEvent(QMouseEvent *e)
         }
 
         if (!found) {
-            mMouseOverHandle = 0;
+            mMouseOverHandle = nullptr;
             if (mSelection.contains(e->pos())) {
                 setCursor(Qt::OpenHandCursor);
             } else if (mAcceptWidget && QRect(mAcceptWidget->mapToParent(mAcceptWidget->pos()), QSize(100, 60)).contains(e->pos())) {
@@ -497,7 +497,7 @@ void AreaDialog::mouseReleaseEvent(QMouseEvent *e)
     mNewSelection = false;
     mIdleTimer.start();
 
-    if (mMouseOverHandle == 0 && mSelection.contains(e->pos())) {
+    if (mMouseOverHandle == nullptr && mSelection.contains(e->pos())) {
         setCursor(Qt::OpenHandCursor);
     }
 
@@ -674,7 +674,7 @@ void AreaDialog::paintEvent(QPaintEvent *e)
             magStart = QPoint(mSelection.right(), mSelection.center().y());
         } else if (mMouseOverHandle == &mBHandle) {
             magStart =  QPoint(mSelection.center().x(), mSelection.bottom());
-        } else if (mMouseOverHandle == 0) {
+        } else if (mMouseOverHandle == nullptr) {
             magStart = mMousePos;
         }
 
