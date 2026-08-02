@@ -198,16 +198,12 @@ QPair<QPixmap, QPoint> os::cursor()
 #endif
 }
 
-void os::effect(QObject *target, const char *slot, int frames, int duration, const char *cleanup)
+void os::effect(QObject *target, const char *slot, int frames, int duration)
 {
     QTimeLine *timeLine = new QTimeLine(duration);
     timeLine->setFrameRange(0, frames);
 
     timeLine->connect(timeLine, SIGNAL(frameChanged(int)), target, slot);
-
-    if (cleanup != 0) {
-        timeLine->connect(timeLine, SIGNAL(finished()), target, SLOT(cleanup()));
-    }
 
     timeLine->connect(timeLine, SIGNAL(finished()), timeLine, SLOT(deleteLater()));
 
