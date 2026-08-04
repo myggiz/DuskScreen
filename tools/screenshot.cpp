@@ -280,19 +280,26 @@ void Screenshot::saveFinished(Result result, const QString &fileName)
     mOptions.fileName = fileName;
     mOptions.result   = result;
 
-    if (!mOptions.result) {
+    // Compared against the enumerators rather than tested for truth: Result has
+    // three values, and Cancel is 2, so a `!result` test reads as "not
+    // cancelled" and sent a dismissed Save As into the optimize branch below —
+    // running optipng against the empty filename it never got.
+    if (result == Screenshot::Failure) {
         // Take the reserved name back out of the way, so a failed capture does
         // not leave an empty file behind holding a number.
         if (!fileName.isEmpty()) {
             QFile::remove(fileName);
         }
 
-        // Failure: finish here. Falling through emitted finished() a second
-        // time, or started optimize() on a file that was never written.
         emit finished();
-    } else if (mOptions.format == Screenshot::PNG && mOptions.optimize && mOptions.file) {
+    } else if (result == Screenshot::Success
+               && mOptions.format == Screenshot::PNG
+               && mOptions.optimize
+               && mOptions.file) {
         optimize();
     } else {
+        // Success with nothing to optimise, or Cancel: there is no file to work
+        // on either way.
         emit finished();
     }
 

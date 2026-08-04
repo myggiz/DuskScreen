@@ -68,6 +68,10 @@ void ScreenshotManager::take(Screenshot::Options &options)
     Screenshot *newScreenshot = new Screenshot(this, options);
     mScreenshots.append(newScreenshot);
 
+    // The count only ever changed on the way down, so the status went straight
+    // from idle to idle and never showed the work in between.
+    emit activeCountChange();
+
     connect(newScreenshot, &Screenshot::cleanup        , this, &ScreenshotManager::cleanup);
     connect(newScreenshot, &Screenshot::finished       , this, &ScreenshotManager::finished);
 
