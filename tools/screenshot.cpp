@@ -77,16 +77,48 @@ QString Screenshot::getName(const NamingOptions &options, const QString &prefix,
     }
 
     switch (options.naming) {
-    case Screenshot::Numeric: // Numeric
-        // Iterating through the folder to find the largest numeric naming.
-        for (auto file : directory.entryList(QDir::Files)) {
-            if (file.contains(prefix)) {
-                file.chop(file.size() - file.lastIndexOf("."));
-                file.remove(prefix);
+    case Screenshot::Numeric: {
+        // Find the highest number already used, so the next one follows it.
+        //
+        // The prefix has to be matched where it actually sits — at the front,
+        // or at the back when the name is flipped — and what remains has to be
+        // a number and nothing else. Searching for the prefix anywhere and
+        // deleting every occurrence spliced the surrounding text together, so
+        // "2screenshot.5.png" read as 25 and pushed the next capture past it.
+        //
+        // Letting QDir do the matching also keeps the obviously unrelated files
+        // out of the loop, which is most of the cost in a large folder.
+        const QString filter = options.flip ? QString("*" % prefix % "*")
+                                            : QString(prefix % "*");
 
-                if (file.toInt() > naming_largest) {
-                    naming_largest = file.toInt();
+        for (const QString &entry : directory.entryList({filter}, QDir::Files)) {
+            QString number = entry;
+
+            const int extensionAt = number.lastIndexOf('.');
+
+            if (extensionAt > 0) {
+                number.truncate(extensionAt);
+            }
+
+            if (options.flip) {
+                if (!number.endsWith(prefix)) {
+                    continue;
                 }
+
+                number.chop(prefix.size());
+            } else {
+                if (!number.startsWith(prefix)) {
+                    continue;
+                }
+
+                number.remove(0, prefix.size());
+            }
+
+            bool isNumber = false;
+            const int used = number.toInt(&isNumber);
+
+            if (isNumber && used > naming_largest) {
+                naming_largest = used;
             }
         }
 
@@ -99,7 +131,9 @@ QString Screenshot::getName(const NamingOptions &options, const QString &prefix,
         } else {
             naming = naming.arg(naming_largest + 1);
         }
+
         break;
+    }
     case  Screenshot::Date: // Date
         naming = naming.arg(QLocale().toString(QDateTime::currentDateTime(), options.dateFormat));
         break;
