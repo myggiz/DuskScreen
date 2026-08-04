@@ -168,8 +168,9 @@ void WindowPicker::mouseMoveEvent(QMouseEvent *event)
 
 #if defined(Q_OS_WIN)
     POINT mousePos;
-    mousePos.x = event->globalX();
-    mousePos.y = event->globalY();
+    const QPoint globalPos = event->globalPosition().toPoint();
+    mousePos.x = globalPos.x();
+    mousePos.y = globalPos.y();
 
     HWND cWindow = GetAncestor(WindowFromPoint(mousePos), GA_ROOT);
 
@@ -356,8 +357,9 @@ void WindowPicker::mouseReleaseEvent(QMouseEvent *event)
         // the release, capturing a window the user wasn't pointing at.
 #if defined(Q_OS_WIN)
         POINT mousePos;
-        mousePos.x = event->globalX();
-        mousePos.y = event->globalY();
+        const QPoint globalPos = event->globalPosition().toPoint();
+        mousePos.x = globalPos.x();
+        mousePos.y = globalPos.y();
 
         WId nativeWindow = (WId)GetAncestor(WindowFromPoint(mousePos), GA_ROOT);
 #elif defined(Q_OS_LINUX)

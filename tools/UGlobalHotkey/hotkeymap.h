@@ -118,6 +118,13 @@ inline size_t QtKeyToWin(Qt::Key key)
         return VK_VOLUME_UP;
     case Qt::Key_VolumeMute:
         return VK_VOLUME_MUTE;
+
+    // Qt::Key has hundreds of enumerators and this maps only the ones Windows
+    // names differently; everything else already matches and falls through to
+    // the return below. Saying so explicitly keeps -Wswitch from listing every
+    // unmapped key on each build and burying real warnings.
+    default:
+        break;
     }
 
     return key;
