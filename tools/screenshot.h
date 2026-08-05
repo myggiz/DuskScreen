@@ -132,6 +132,9 @@ private:
     // Set only when the user backs out of the area selector, so that a null
     // pixmap from a *failed* grab isn't misreported as a cancellation.
     bool mCancelled;
+    // The optimiser reports a crash through both finished() and errorOccurred(),
+    // and the screenshot may only be finished once.
+    bool mOptimizationFinished;
 
 };
 
