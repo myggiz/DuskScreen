@@ -53,6 +53,19 @@ qmake duskscreen.pro
 mingw32-make            # or nmake / jom for an MSVC kit
 ```
 
+**Qt Image Formats is also needed** for the WEBP save format. It is an optional
+Qt component and is not installed by default, so a stock kit builds and runs
+fine but simply writes no file when WEBP is selected — there is nothing in the
+build to say why. Add it through the Qt Maintenance Tool
+(*Additional Libraries → Qt Image Formats*), or:
+
+```
+MaintenanceTool.exe install qt.qt6.6111.addons.qtimageformats \
+    --accept-licenses --accept-obligations --confirm-command
+```
+
+Once it is present, `windeployqt` picks up `imageformats/qwebp.dll` on its own.
+
 To produce a standalone, redistributable folder, run `windeployqt` on the built
 `duskscreen.exe` (and copy the `sounds/` folder next to it).
 
