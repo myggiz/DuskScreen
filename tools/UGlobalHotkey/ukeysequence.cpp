@@ -84,7 +84,6 @@ void UKeySequence::addKey(const QString &key)
     }
 
     QString mod = key.toLower();
-    qDebug() << "mod: " << mod;
     if (mod == "alt") {
         addKey(Qt::Key_Alt);
         return;
@@ -119,7 +118,6 @@ void UKeySequence::addKey(Qt::Key key)
             return;
         }
     }
-    qDebug() << "Key added: " << key;
     mKeys.push_back(key);
 }
 
