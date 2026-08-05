@@ -175,9 +175,21 @@ void OptionsDialog::loadSettings()
     }
 
     settings()->beginGroup("file");
-    ui.formatComboBox->setCurrentIndex(settings()->value("format", 1).toInt());
+    // setCurrentIndex() accepts anything and leaves the box showing nothing on
+    // an out-of-range value, which then reads back as -1 and is cast straight
+    // to a Format or Naming — putting an unsubstituted "%1" in the filename
+    // preview. The settings file is user-editable and importSettings() copies
+    // values in without checking them, so fall back to the same default a
+    // missing key would give. screenshotAction() already guards the capture
+    // side; this is the matching guard on the dialog side.
+    const int storedFormat = settings()->value("format", 1).toInt();
+    const int storedNaming = settings()->value("naming", 0).toInt();
+
+    ui.formatComboBox->setCurrentIndex(storedFormat >= 0 && storedFormat < ui.formatComboBox->count()
+                                       ? storedFormat : 1);
     ui.prefixLineEdit->setText(settings()->value("prefix", tr("screenshot.")).toString());
-    ui.namingComboBox->setCurrentIndex(settings()->value("naming", 0).toInt());
+    ui.namingComboBox->setCurrentIndex(storedNaming >= 0 && storedNaming < ui.namingComboBox->count()
+                                       ? storedNaming : 0);
     ui.targetLineEdit->setText(settings()->value("target", targetDefault).toString());
     ui.fileGroupBox->setChecked(settings()->value("enabled", true).toBool());
     settings()->endGroup();
