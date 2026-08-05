@@ -54,7 +54,8 @@ Screenshot::Screenshot(QObject *parent, Screenshot::Options options):
     QObject(parent),
     mOptions(std::move(options)),
     mPixmapDelay(false),
-    mCancelled(false)
+    mCancelled(false),
+    mOptimizationFinished(false)
 {
     if (mOptions.format == Screenshot::PNG) {
         // For PNG the "quality" argument is a compression level, not a quality
@@ -185,9 +186,17 @@ void Screenshot::optimize()
 {
     QProcess *process = new QProcess(this);
 
-    // Delete the QProcess once it's done.
-    connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this   , SLOT(optimizationDone()));
-    connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), process, SLOT(deleteLater()));
+    // errorOccurred() as well as finished(): a program that cannot be started
+    // at all reports only the former, and on every platform except Windows it
+    // arrives after start() has already returned — too late for the
+    // still-NotRunning check below. Without this the screenshot never finishes,
+    // so it is never removed from the active list: the count climbs by one per
+    // capture and never comes down, and the Screenshot and its QProcess both
+    // leak. A present-but-unstartable optipng is enough to trigger it.
+    connect(process, &QProcess::finished     , this   , &Screenshot::optimizationDone);
+    connect(process, &QProcess::errorOccurred, this   , &Screenshot::optimizationDone);
+    connect(process, &QProcess::finished     , process, &QObject::deleteLater);
+    connect(process, &QProcess::errorOccurred, process, &QObject::deleteLater);
 
     QString optiPNG;
 
@@ -213,6 +222,14 @@ void Screenshot::optimize()
 
 void Screenshot::optimizationDone()
 {
+    // A crash reports both finished() and errorOccurred(), and the early exits
+    // in optimize() call this directly, so more than one arrival is normal.
+    if (mOptimizationFinished) {
+        return;
+    }
+
+    mOptimizationFinished = true;
+
     emit finished();
 }
 
@@ -563,7 +580,7 @@ void Screenshot::selectedWindow()
     WindowPicker *windowPicker = new WindowPicker;
     mPixmapDelay = true;
 
-    connect(windowPicker, SIGNAL(pixmap(QPixmap)), this, SLOT(setPixmap(QPixmap)));
+    connect(windowPicker, &WindowPicker::pixmap, this, &Screenshot::setPixmap);
 }
 
 void Screenshot::wholeScreen()
