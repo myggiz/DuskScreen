@@ -44,6 +44,13 @@ Users can decline a specific version ("Skip This Version", stored as
    a reason to recompile: an incremental build after a version bump leaves
    `main.cpp` untouched, producing a binary that reports the *previous* version
    in About and compares against it when checking for updates.
+
+   **Check `imageformats/qwebp.dll` is in the payload.** The WEBP save format
+   depends on Qt Image Formats, an optional Qt component (see the README's
+   build section). Without it in the kit there is nothing for `windeployqt` to
+   deploy, the build succeeds, and choosing WEBP simply writes no file. With it
+   the plugin count rises from 4 to 9 and the pruned payload grows by roughly
+   five files — that growth is the signal it made it in.
 3. Create a GitHub release tagged **`v<version>`** — the leading `v` matters,
    as does the tag parsing as a version number.
 4. Attach the zip and publish the SHA-256 of both the zip and `duskscreen.exe`
