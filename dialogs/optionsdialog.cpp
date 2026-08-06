@@ -28,6 +28,8 @@
 #include <QRegularExpression>
 #include <QScreen>
 #include <QSettings>
+#include <QImageWriter>
+#include <QStandardItemModel>
 #include <QStandardPaths>
 #include <QTimer>
 #include <QUrl>
@@ -175,6 +177,35 @@ void OptionsDialog::loadSettings()
     }
 
     settings()->beginGroup("file");
+
+    // Every entry in the format list is written by an image-format plugin, and
+    // the one providing WEBP ships in Qt Image Formats — an optional component
+    // a stock kit does not install. Offering a format the running build cannot
+    // write gives a capture that fails with nothing to explain why, so ask
+    // instead of assuming. Asking at runtime rather than at build time also
+    // covers the case that actually happened: the plugin present while
+    // building and absent from the deployed folder.
+    //
+    // Disabled rather than removed, because the position in this list *is* the
+    // stored Screenshot::Format value — dropping an entry would shift every
+    // format after it and silently reinterpret saved settings.
+    if (auto *formats = qobject_cast<QStandardItemModel *>(ui.formatComboBox->model())) {
+        const QList<QByteArray> writable = QImageWriter::supportedImageFormats();
+
+        for (int format = 0; format < ui.formatComboBox->count(); ++format) {
+            const QString name = ui.formatComboBox->itemText(format);
+
+            if (writable.contains(name.toLower().toLatin1())) {
+                continue;
+            }
+
+            formats->item(format)->setEnabled(false);
+            ui.formatComboBox->setItemData(format,
+                                           tr("%1 is not supported by this installation.").arg(name),
+                                           Qt::ToolTipRole);
+        }
+    }
+
     // setCurrentIndex() accepts anything and leaves the box showing nothing on
     // an out-of-range value, which then reads back as -1 and is cast straight
     // to a Format or Naming — putting an unsubstituted "%1" in the filename
