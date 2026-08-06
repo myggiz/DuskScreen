@@ -26,6 +26,7 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QPointer>
+#include <QPushButton>
 #include <QProcess>
 #include <QScreen>
 #include <QSettings>
@@ -360,24 +361,34 @@ void DuskScreenWindow::quit()
 {
     settings()->setValue("position", pos());
 
-    int answer = 0;
-    QString doing;
-
     if (ScreenshotManager::instance()->activeCount() > 0) {
-        doing = tr("processing");
+        // Built rather than using the static question() helper: that overload
+        // is deprecated in Qt 6 and slated for removal, and it identifies the
+        // answer by button index, which reads as a bare integer at the call
+        // site. Asking which button was clicked says what it means.
+        QMessageBox confirmation(QMessageBox::Question,
+                                 tr("Are you sure you want to quit?"),
+                                 tr("DuskScreen is currently processing screenshots. "
+                                    "Are you sure you want to quit?"),
+                                 QMessageBox::NoButton,
+                                 this);
+
+        QPushButton *quitButton = confirmation.addButton(tr("Quit"), QMessageBox::AcceptRole);
+        confirmation.addButton(tr("Don't Quit"), QMessageBox::RejectRole);
+        confirmation.setDefaultButton(quitButton);
+
+        confirmation.exec();
+
+        // Anything other than Quit keeps the application running, which now
+        // includes Escape and the title-bar close button: the old overload
+        // designated no escape button, so both were simply ignored and the
+        // dialog could only be dismissed by choosing one of the two answers.
+        if (confirmation.clickedButton() != quitButton) {
+            return;
+        }
     }
 
-    if (!doing.isEmpty()) {
-        answer = QMessageBox::question(this,
-                                       tr("Are you sure you want to quit?"),
-                                       tr("DuskScreen is currently %1 screenshots. Are you sure you want to quit?").arg(doing),
-                                       tr("Quit"),
-                                       tr("Don't Quit"));
-    }
-
-    if (answer == 0) {
-        emit finished();
-    }
+    emit finished();
 }
 
 void DuskScreenWindow::restoreNotification()
