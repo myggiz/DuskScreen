@@ -69,6 +69,21 @@ Once it is present, `windeployqt` picks up `imageformats/qwebp.dll` on its own.
 To produce a standalone, redistributable folder, run `windeployqt` on the built
 `duskscreen.exe` (and copy the `sounds/` folder next to it).
 
+### Tests
+
+`tests/tests.pro` is a separate QtTest target covering the pure-logic code that
+has regressed before — it is not part of the application build:
+
+```bash
+qmake tests/tests.pro
+mingw32-make
+./release/tst_duskscreen.exe
+```
+
+Build it out of tree. Known bugs are recorded with `QEXPECT_FAIL` naming the
+issue, so the suite passes as it stands: fixing one of those turns it into an
+XPASS, which fails the run until the marker is removed.
+
 ## License
 
 GPL v2-or-later, unchanged from upstream — see [LICENSE](LICENSE).
