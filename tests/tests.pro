@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = tst_duskscreen
 
-QT += core gui widgets testlib
+QT += core gui testlib
 CONFIG += c++17 console testcase
 CONFIG -= app_bundle
 
@@ -23,6 +23,8 @@ SOURCES += main.cpp \
 # branch of that header needs xcb. UGlobalHotkeys is a QWidget, which is why the
 # test binary links widgets and its main() is a QApplication.
 windows {
+    QT += widgets
+
     HEADERS += tst_hotkeymap.h \
         tst_hotkeyregistration.h \
         ../tools/UGlobalHotkey/uglobalhotkeys.h

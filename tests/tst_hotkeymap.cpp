@@ -7,6 +7,34 @@
 
 #include "hotkeymap.h"
 
+namespace {
+
+// QCOMPARE returns from the test function when it fails, so the restore cannot
+// sit at the end of the test body: it has to happen on the way out, however the
+// test leaves. KLF_SETFORPROCESS makes the change process-wide, so leaking it
+// would hand every later test a layout it did not ask for.
+class ProcessKeyboardLayout
+{
+public:
+    explicit ProcessKeyboardLayout(HKL layout)
+        : mPrevious(ActivateKeyboardLayout(layout, KLF_SETFORPROCESS)) {}
+
+    ~ProcessKeyboardLayout()
+    {
+        if (mPrevious) {
+            ActivateKeyboardLayout(mPrevious, KLF_SETFORPROCESS);
+        }
+    }
+
+    ProcessKeyboardLayout(const ProcessKeyboardLayout &) = delete;
+    ProcessKeyboardLayout &operator=(const ProcessKeyboardLayout &) = delete;
+
+private:
+    HKL mPrevious;
+};
+
+}
+
 void tst_HotkeyMap::namedKeysMapToTheirVirtualKey_data()
 {
     QTest::addColumn<int>("key");
@@ -94,7 +122,7 @@ void tst_HotkeyMap::usLayoutProducesTheDocumentedOemCodes()
         QSKIP("the US keyboard layout is not installed");
     }
 
-    const HKL previous = ActivateKeyboardLayout(us, KLF_SETFORPROCESS);
+    const ProcessKeyboardLayout layout(us);
 
     QCOMPARE(QtKeyToWin(Qt::Key_Period), size_t(VK_OEM_PERIOD));
     QCOMPARE(QtKeyToWin(Qt::Key_Comma), size_t(VK_OEM_COMMA));
@@ -110,10 +138,6 @@ void tst_HotkeyMap::usLayoutProducesTheDocumentedOemCodes()
 
     // A key the US layout has no way to produce.
     QCOMPARE(QtKeyToWin(Qt::Key_Aring), size_t(0));
-
-    if (previous) {
-        ActivateKeyboardLayout(previous, KLF_SETFORPROCESS);
-    }
 }
 
 // '.' is on every layout, so this one is unconditional — and it is the key
