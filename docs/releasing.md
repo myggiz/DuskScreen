@@ -36,7 +36,20 @@ Users can decline a specific version ("Skip This Version", stored as
 
 1. Bump `VERSION` in `version.pri`, and the filename in the README's checksum
    example.
-2. **Build clean** — `make clean` or a fresh build directory — then run
+2. **Move the `Unreleased` section** of [changelog.md](changelog.md) to the new
+   version, and fix up the three links at the bottom of the file:
+
+   - rename the heading to `## [<version>] - <today's date>`, and start a fresh
+     empty `Unreleased` above it;
+   - add a `[<version>]:` definition pointing at the release tag;
+   - **repoint `[Unreleased]:`** at `compare/v<version>...master`. It is left
+     pointing at the previous tag otherwise, so it would list changes this
+     release already shipped.
+
+   The changelog is the record of what shipped — the release notes are written
+   from it, not the other way round, and the website reads it. Writing it here
+   rather than after publishing is what keeps it honest.
+3. **Build clean** — `make clean` or a fresh build directory — then run
    `windeployqt`, prune, and zip as `DuskScreen-<version>-win64.zip`.
 
    The clean build is not optional. `VERSION` reaches the code as the
@@ -51,9 +64,9 @@ Users can decline a specific version ("Skip This Version", stored as
    deploy, the build succeeds, and choosing WEBP simply writes no file. With it
    the plugin count rises from 4 to 9 and the pruned payload grows by roughly
    five files — that growth is the signal it made it in.
-3. Create a GitHub release tagged **`v<version>`** — the leading `v` matters,
+4. Create a GitHub release tagged **`v<version>`** — the leading `v` matters,
    as does the tag parsing as a version number.
-4. Attach the zip and publish the SHA-256 of both the zip and `duskscreen.exe`
+5. Attach the zip and publish the SHA-256 of both the zip and `duskscreen.exe`
    in the release notes.
 
 Creating the release as a **draft** first is recommended: drafts are invisible
