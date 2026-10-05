@@ -14,6 +14,7 @@ private slots:
     void lettersAndDigitsFallThroughUnchanged();
     void punctuationMatchesTheActiveLayout_data();
     void punctuationMatchesTheActiveLayout();
+    void usLayoutProducesTheDocumentedOemCodes();
     void periodResolvesToARealKey();
     void punctuationNoLongerGrabsUnrelatedKeys();
     void unmappableKeysAreRefused_data();

@@ -80,6 +80,42 @@ void tst_HotkeyMap::punctuationMatchesTheActiveLayout()
     QCOMPARE(QtKeyToWin(Qt::Key(key)), size_t(scan & 0xFF));
 }
 
+// The test above can only prove the mapping agrees with the layout, not that it
+// agrees with the *right* layout. This one loads a known one and asserts the
+// documented US assignments, which are constants rather than a second call to
+// the function under test.
+//
+// The layout is activated for this thread only, so the desktop is unaffected.
+void tst_HotkeyMap::usLayoutProducesTheDocumentedOemCodes()
+{
+    const HKL us = LoadKeyboardLayoutW(L"00000409", KLF_NOTELLSHELL);
+
+    if (!us) {
+        QSKIP("the US keyboard layout is not installed");
+    }
+
+    const HKL previous = ActivateKeyboardLayout(us, KLF_SETFORPROCESS);
+
+    QCOMPARE(QtKeyToWin(Qt::Key_Period), size_t(VK_OEM_PERIOD));
+    QCOMPARE(QtKeyToWin(Qt::Key_Comma), size_t(VK_OEM_COMMA));
+    QCOMPARE(QtKeyToWin(Qt::Key_Minus), size_t(VK_OEM_MINUS));
+    QCOMPARE(QtKeyToWin(Qt::Key_Equal), size_t(VK_OEM_PLUS));
+    QCOMPARE(QtKeyToWin(Qt::Key_Semicolon), size_t(VK_OEM_1));
+    QCOMPARE(QtKeyToWin(Qt::Key_Slash), size_t(VK_OEM_2));
+    QCOMPARE(QtKeyToWin(Qt::Key_QuoteLeft), size_t(VK_OEM_3));
+    QCOMPARE(QtKeyToWin(Qt::Key_BracketLeft), size_t(VK_OEM_4));
+    QCOMPARE(QtKeyToWin(Qt::Key_Backslash), size_t(VK_OEM_5));
+    QCOMPARE(QtKeyToWin(Qt::Key_BracketRight), size_t(VK_OEM_6));
+    QCOMPARE(QtKeyToWin(Qt::Key_Apostrophe), size_t(VK_OEM_7));
+
+    // A key the US layout has no way to produce.
+    QCOMPARE(QtKeyToWin(Qt::Key_Aring), size_t(0));
+
+    if (previous) {
+        ActivateKeyboardLayout(previous, KLF_SETFORPROCESS);
+    }
+}
+
 // '.' is on every layout, so this one is unconditional — and it is the key
 // DUSK-3 was reported against.
 void tst_HotkeyMap::periodResolvesToARealKey()

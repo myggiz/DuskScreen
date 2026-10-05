@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = tst_duskscreen
 
-QT += core gui testlib
+QT += core gui widgets testlib
 CONFIG += c++17 console testcase
 CONFIG -= app_bundle
 
@@ -20,8 +20,14 @@ SOURCES += main.cpp \
     ../tools/UGlobalHotkey/ukeysequence.cpp
 
 # QtKeyToWin only exists in the Windows branch of hotkeymap.h, and the Linux
-# branch of that header needs xcb.
+# branch of that header needs xcb. UGlobalHotkeys is a QWidget, which is why the
+# test binary links widgets and its main() is a QApplication.
 windows {
-    HEADERS += tst_hotkeymap.h
-    SOURCES += tst_hotkeymap.cpp
+    HEADERS += tst_hotkeymap.h \
+        tst_hotkeyregistration.h \
+        ../tools/UGlobalHotkey/uglobalhotkeys.h
+    SOURCES += tst_hotkeymap.cpp \
+        tst_hotkeyregistration.cpp \
+        ../tools/UGlobalHotkey/uglobalhotkeys.cpp
+    LIBS += -luser32
 }
