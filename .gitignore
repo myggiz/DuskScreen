@@ -6,6 +6,7 @@ debug/
 Makefile*
 .qmake.stash
 object_script.*
+target_wrapper.sh
 build_errors.log
 *.o
 ui_*.h

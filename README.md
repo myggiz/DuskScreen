@@ -72,17 +72,25 @@ To produce a standalone, redistributable folder, run `windeployqt` on the built
 ### Tests
 
 `tests/tests.pro` is a separate QtTest target covering the pure-logic code that
-has regressed before — it is not part of the application build:
+has regressed before — it is not part of the application build.
+
+Build it in its own directory, so its `Makefile` doesn't collide with the
+application's:
 
 ```bash
-qmake tests/tests.pro
+mkdir build-tests && cd build-tests
+qmake ../tests/tests.pro
 mingw32-make
 ./release/tst_duskscreen.exe
 ```
 
-Build it out of tree. Known bugs are recorded with `QEXPECT_FAIL` naming the
-issue, so the suite passes as it stands: fixing one of those turns it into an
-XPASS, which fails the run until the marker is removed.
+Known bugs are recorded with `QEXPECT_FAIL` naming the issue, so the suite
+passes as it stands: fixing one of those turns it into an XPASS, which fails the
+run until the marker is removed.
+
+Qt writes the report to the console, which some terminals don't attach — if the
+run looks silent, `-o <file>,txt` writes it to a file instead. The exit code is
+reliable either way.
 
 ## License
 
