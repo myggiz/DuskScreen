@@ -7,6 +7,8 @@ DuskScreen is a modernized fork of
 [Christian Kaiser's Lightscreen](https://github.com/ckaiser/Lightscreen),
 ported to **Qt 6** and slimmed down to a focused capture-to-disk tool.
 
+What changed in each version is in [the changelog](docs/changelog.md).
+
 ## What's different from upstream Lightscreen
 
 - **Ported to Qt 6** (builds against Qt 6.11 / MinGW). Every removed-in-Qt6 API was
