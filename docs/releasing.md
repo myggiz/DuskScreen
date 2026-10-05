@@ -36,12 +36,19 @@ Users can decline a specific version ("Skip This Version", stored as
 
 1. Bump `VERSION` in `version.pri`, and the filename in the README's checksum
    example.
-2. **Rename the `Unreleased` section** of [changelog.md](changelog.md) to the
-   new version and today's date, add the comparison link, and start a fresh
-   empty `Unreleased`. The changelog is the record of what shipped — the
-   release notes are written from it, not the other way round, and the website
-   reads it. Writing it here rather than after publishing is what keeps it
-   honest.
+2. **Move the `Unreleased` section** of [changelog.md](changelog.md) to the new
+   version, and fix up the three links at the bottom of the file:
+
+   - rename the heading to `## [<version>] - <today's date>`, and start a fresh
+     empty `Unreleased` above it;
+   - add a `[<version>]:` definition pointing at the release tag;
+   - **repoint `[Unreleased]:`** at `compare/v<version>...master`. It is left
+     pointing at the previous tag otherwise, so it would list changes this
+     release already shipped.
+
+   The changelog is the record of what shipped — the release notes are written
+   from it, not the other way round, and the website reads it. Writing it here
+   rather than after publishing is what keeps it honest.
 3. **Build clean** — `make clean` or a fresh build directory — then run
    `windeployqt`, prune, and zip as `DuskScreen-<version>-win64.zip`.
 

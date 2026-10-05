@@ -49,8 +49,6 @@ up to and including 1.0.14. Work tracked after that lives in Linear.
   quitting from the tray asked about work that had already finished.
 - The Options window no longer shows blank Format and Filename boxes when the
   settings file holds a value it doesn't recognise; both fall back to a default.
-- Cancelling "Save as" no longer starts the PNG optimiser on a file that was
-  never written.
 - Hotkey parsing no longer writes chatter to the system log on every start.
 
 ## [1.0.13] - 2026-08-04
