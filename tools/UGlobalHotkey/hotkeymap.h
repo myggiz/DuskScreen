@@ -92,18 +92,6 @@ inline size_t QtKeyToWin(Qt::Key key)
         return VK_SPACE;
     case Qt::Key_Asterisk:
         return VK_MULTIPLY;
-    // OEM codes, not the numeric-keypad ones: these Qt keys are the main-row
-    // punctuation, so VK_ADD/VK_SEPARATOR/VK_SUBTRACT/VK_DIVIDE registered a
-    // keypad key the user never pressed — and VK_SEPARATOR barely exists on
-    // real keyboards, so that binding could not fire at all.
-    case Qt::Key_Plus:
-        return VK_OEM_PLUS;
-    case Qt::Key_Comma:
-        return VK_OEM_COMMA;
-    case Qt::Key_Minus:
-        return VK_OEM_MINUS;
-    case Qt::Key_Slash:
-        return VK_OEM_2;
     case Qt::Key_MediaNext:
         return VK_MEDIA_NEXT_TRACK;
     case Qt::Key_MediaPrevious:
@@ -120,14 +108,50 @@ inline size_t QtKeyToWin(Qt::Key key)
         return VK_VOLUME_MUTE;
 
     // Qt::Key has hundreds of enumerators and this maps only the ones Windows
-    // names differently; everything else already matches and falls through to
-    // the return below. Saying so explicitly keeps -Wswitch from listing every
+    // names differently. Saying so explicitly keeps -Wswitch from listing every
     // unmapped key on each build and burying real warnings.
     default:
         break;
     }
 
-    return key;
+    // Past the cases above, Qt::Key and the virtual-key codes agree only on the
+    // ASCII letters and digits, where they share values by design.
+    if ((key >= Qt::Key_0 && key <= Qt::Key_9) || (key >= Qt::Key_A && key <= Qt::Key_Z)) {
+        return key;
+    }
+
+    // Character keys: ask the active keyboard layout which key produces this
+    // character. For the Latin-1 range a Qt::Key value *is* the character, so
+    // it can be handed to VkKeyScanW directly.
+    //
+    // A table cannot do this job. VK_OEM_1 is ';' on a US keyboard and 'ö' on a
+    // Swedish one, so any fixed punctuation mapping is wrong on most of the
+    // world's layouts — measured: on Swedish, '/' is Shift+'7' rather than
+    // VK_OEM_2, which an earlier fix had assumed. Going through the layout also
+    // makes the keys that only exist outside ASCII bindable at all.
+    //
+    // The shift state VkKeyScanW reports is ignored on purpose: reaching the
+    // character required pressing Shift, so Qt already recorded it as a
+    // modifier in the sequence.
+    if (key > 0 && key <= 0xFF) {
+        const SHORT scan = VkKeyScanW(static_cast<wchar_t>(key));
+
+        if (scan != -1) {
+            return scan & 0xFF;
+        }
+    }
+
+    // Not a key this layout can produce, or not a character key at all. Every
+    // such key used to be returned unchanged, handing RegisterHotKey whatever
+    // unrelated key shared that number: Qt::Key_Period is 0x2E, so Ctrl+.
+    // grabbed Ctrl+Delete system-wide, and the bracket keys grabbed the Windows
+    // and menu keys.
+    //
+    // 0 is not a virtual key, so it means "no mapping" — registerHotkey()
+    // checks for it and fails the binding, which DuskScreen already reports.
+    // RegisterHotKey itself *accepts* virtual key 0 and registers a hotkey that
+    // nothing can ever trigger, so the check has to happen before the call.
+    return 0;
 }
 #elif defined(Q_OS_LINUX)
 

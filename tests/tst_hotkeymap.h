@@ -10,10 +10,14 @@ class tst_HotkeyMap : public QObject
 private slots:
     void namedKeysMapToTheirVirtualKey_data();
     void namedKeysMapToTheirVirtualKey();
-    void mainRowPunctuationUsesOemCodes();
     void lettersAndDigitsFallThroughUnchanged_data();
     void lettersAndDigitsFallThroughUnchanged();
-    void unmappedPunctuationCollidesWithUnrelatedKeys();
+    void punctuationMatchesTheActiveLayout_data();
+    void punctuationMatchesTheActiveLayout();
+    void periodResolvesToARealKey();
+    void punctuationNoLongerGrabsUnrelatedKeys();
+    void unmappableKeysAreRefused_data();
+    void unmappableKeysAreRefused();
 };
 
 #endif // TST_HOTKEYMAP_H
