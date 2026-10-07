@@ -8,22 +8,43 @@ macOS conditional inherited from Lightscreen. Both are gone. This file is the
 handover: what went, where it was, and what a future attempt would have to
 build. A separate fork is a reasonable home for either.
 
-## macOS was never real
+## macOS was never supported
 
-One conditional, in `dialogs/namingdialog.cpp`, rejected `:` in the date format
-on macOS. It came in with `6242557` — an upstream Lightscreen commit, inherited
-at the fork rather than written here.
+One conditional of our own, in `dialogs/namingdialog.cpp`, rejected `:` in the
+date format on macOS. It came in with `6242557` — an upstream Lightscreen
+commit, inherited at the fork rather than written here. It was removed along
+with `CONFIG -= app_bundle` in the test project, a macOS-only qmake setting that
+did nothing on a Windows build.
 
-Nothing else existed. `duskscreen.pro` never had a `macx:` section, no macOS
-libraries were ever linked, and no macOS build was ever attempted, so that
-branch could not have compiled into an application. It was removed along with a
-`CONFIG -= app_bundle` line in the test project, which is a macOS-only qmake
-setting that had no effect on a Windows build either.
+**That is not the same as there being no macOS wiring.** Be careful here if you
+are planning a port, because the build is less bare than it looks:
 
-A real macOS port is a bigger job than the Linux one: screen capture needs
-`ScreenCaptureKit` and the screen-recording permission, global hotkeys need
-Carbon's `RegisterEventHotKey` or a tap, and window picking needs the
-accessibility permission. None of that has been investigated.
+- `duskscreen.pro` includes `tools/UGlobalHotkey/uglobalhotkey.pri`, which pulls
+  in `uglobalhotkey-libs.pri` — and that links `-framework Carbon` on macOS.
+- That vendored library also carries a complete macOS hotkey implementation:
+  `QtKeyToMac` plus a Carbon `RegisterEventHotKey` handler.
+- The platform-specific functions in `tools/os.cpp` have `#else` fallbacks
+  rather than Windows-only bodies. `os::grabWindow` falls back to
+  `QScreen::grabWindow`, and `os::cursor` returns an empty pixmap.
+
+So a macOS build would plausibly have compiled. What is actually missing is
+everything after that: it was never built, never run and never tested, there is
+no `macx:` section configuring one, and nothing was ever written to make capture
+work there.
+
+A port's real work is therefore capture and permissions rather than hotkeys:
+
+- **Capture.** The `QScreen::grabWindow` fallback is not a screenshot tool's
+  answer on a current macOS — it needs `ScreenCaptureKit`, and the user has to
+  grant screen recording in System Settings before anything returns pixels.
+- **The window picker** needs the accessibility permission to see other
+  applications' windows.
+- **Cursor capture** has no implementation for macOS at all.
+- **Packaging** — a bundle, an icon, and signing and notarisation, without which
+  a downloaded build will not open.
+
+Hotkeys are the one piece already present, by way of the vendored library. None
+of the rest has been investigated.
 
 ## Linux was removed
 

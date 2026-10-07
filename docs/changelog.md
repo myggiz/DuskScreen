@@ -22,8 +22,8 @@ up to and including 1.0.14. Work tracked after that lives in Linear.
   groundwork, never support. Making it real needs a different capture and input
   stack, so the half-working code is gone rather than sitting in every platform
   conditional.
-- **A leftover macOS conditional**, inherited from Lightscreen and never wired
-  into the build, so it could not have compiled into a macOS application.
+- **A leftover macOS conditional**, inherited from Lightscreen. macOS was never
+  built, run or tested.
 
   What was removed and what another platform would actually require is written
   up in [docs/platforms.md](platforms.md). The Windows binary is byte-for-byte
