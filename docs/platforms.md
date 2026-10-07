@@ -1,24 +1,44 @@
-# Linux: why there isn't any
+# Platforms: Windows only
 
-**DuskScreen is a Windows application.** It targets Windows only, and there is
-no Linux build, no Linux download, and no intention to add one in this
-repository.
+**DuskScreen is a Windows application.** There is no Linux or macOS build, no
+download for either, and no intention to add one in this repository.
 
-Earlier versions carried Linux and X11 code. 1.0.5 ported the Qt 5-only APIs
-that had blocked compilation (`x11extras`, `QX11Info`, the old
-`QPixmap::grabWindow`) and the tree built and ran on Linux from then on — but it
-was never Linux *support*: capture returned nothing on Wayland, global hotkeys
-were unreliable or unavailable, and the window picker did not work.
+It did not start that way — the tree carried Linux and X11 code, and a stray
+macOS conditional inherited from Lightscreen. Both are gone. This file is the
+handover: what went, where it was, and what a future attempt would have to
+build. A separate fork is a reasonable home for either.
+
+## macOS was never real
+
+One conditional, in `dialogs/namingdialog.cpp`, rejected `:` in the date format
+on macOS. It came in with `6242557` — an upstream Lightscreen commit, inherited
+at the fork rather than written here.
+
+Nothing else existed. `duskscreen.pro` never had a `macx:` section, no macOS
+libraries were ever linked, and no macOS build was ever attempted, so that
+branch could not have compiled into an application. It was removed along with a
+`CONFIG -= app_bundle` line in the test project, which is a macOS-only qmake
+setting that had no effect on a Windows build either.
+
+A real macOS port is a bigger job than the Linux one: screen capture needs
+`ScreenCaptureKit` and the screen-recording permission, global hotkeys need
+Carbon's `RegisterEventHotKey` or a tap, and window picking needs the
+accessibility permission. None of that has been investigated.
+
+## Linux was removed
+
+1.0.5 ported the Qt 5-only APIs that had blocked compilation (`x11extras`,
+`QX11Info`, the old `QPixmap::grabWindow`) and the tree built and ran on Linux
+from then on — but it was never Linux *support*: capture returned nothing on
+Wayland, global hotkeys were unreliable or unavailable, and the window picker did
+not work.
 
 Making those work needs a different capture and input stack rather than more
 fixes to the X11 one, which was assessed in October 2026 and found to be a large
 piece of work with no overlap with the Windows product. Rather than keep
 half-working code in every platform conditional, it was removed.
 
-This file is the handover: what went, where it was, and what a future attempt
-would have to build. A separate fork is a reasonable home for it.
-
-## What was removed
+### What was removed
 
 All of it was DuskScreen's own code. The last commit that contains it is
 **`4c65798`** — `git show 4c65798:tools/os.cpp` and friends, or
@@ -38,19 +58,7 @@ All of it was DuskScreen's own code. The last commit that contains it is
 The Windows binary is byte-for-byte identical before and after, because every
 one of those lived in a branch the Windows compiler never reached.
 
-## What is still here
-
-The vendored libraries keep their Linux code, deliberately:
-
-- `tools/UGlobalHotkey` — `QtKeyToLinux`, `regLinuxHotkey`, the xcb event filter.
-- `tools/SingleApplication` — recorded as unmodified upstream v3.5.6.
-
-Editing either one forks it from upstream and turns every future update into a
-hand merge. Their Linux branches are inert in a Windows build, so they cost
-nothing to keep. A fork that wants Linux back starts with these already in
-place.
-
-## What Linux support would actually require
+### What Linux support would actually require
 
 - **Capture.** Wayland gives no equivalent of an X11 root-window grab. It needs
   the XDG desktop portal `org.freedesktop.portal.Screenshot` (or
@@ -75,7 +83,7 @@ The short version: on X11 most of this worked and was merely buggy. On Wayland �
 which is what a new Linux user actually runs — capture, hotkeys and window
 picking each need a portal, and one of them has no portal at all.
 
-## The defects that were recorded against it
+### The defects that were recorded against it
 
 These were open issues when Linux was dropped. They are cancelled rather than
 fixed, and are kept in Linear for whoever picks this up:
@@ -91,3 +99,18 @@ fixed, and are kept in Linear for whoever picks this up:
 
 DUSK-36 is in vendored code that is still present, so it is a live defect for
 anyone who re-enables the Linux path — it is simply unreachable on Windows.
+
+## What is still here
+
+The vendored libraries keep their Linux and macOS code, deliberately:
+
+- `tools/UGlobalHotkey` — `QtKeyToLinux`, `regLinuxHotkey` and the xcb event
+  filter; `QtKeyToMac`, the Carbon hotkey handler and
+  `mac: LIBS += -framework Carbon`.
+- `tools/SingleApplication` — recorded as unmodified upstream v3.5.6, including
+  its own `Q_OS_MACOS` branch.
+
+Editing either one forks it from upstream and turns every future update into a
+hand merge. Their non-Windows branches are inert in a Windows build, so they
+cost nothing to keep. A fork that wants another platform back starts with these
+already in place.

@@ -21,9 +21,13 @@ up to and including 1.0.14. Work tracked after that lives in Linear.
   hotkeys were unreliable, and the window picker did not work — it was
   groundwork, never support. Making it real needs a different capture and input
   stack, so the half-working code is gone rather than sitting in every platform
-  conditional. What was removed and what Linux would actually require is written
-  up in [docs/linux.md](linux.md). The Windows binary is byte-for-byte identical
-  either way.
+  conditional.
+- **A leftover macOS conditional**, inherited from Lightscreen and never wired
+  into the build, so it could not have compiled into a macOS application.
+
+  What was removed and what another platform would actually require is written
+  up in [docs/platforms.md](platforms.md). The Windows binary is byte-for-byte
+  identical either way.
 
 ### Fixed
 

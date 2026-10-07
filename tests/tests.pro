@@ -3,7 +3,6 @@ TARGET = tst_duskscreen
 
 QT += core gui widgets testlib
 CONFIG += c++17 console testcase
-CONFIG -= app_bundle
 
 INCLUDEPATH += $$PWD/.. $$PWD/../tools/UGlobalHotkey
 
