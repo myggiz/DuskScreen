@@ -4,9 +4,17 @@
 download for either, and no intention to add one in this repository.
 
 It did not start that way — the tree carried Linux and X11 code, and a stray
-macOS conditional inherited from Lightscreen. Both are gone. This file is the
-handover: what went, where it was, and what a future attempt would have to
-build. A separate fork is a reasonable home for either.
+macOS conditional inherited from Lightscreen. Both are gone.
+
+The reason is plain rather than technical: DuskScreen is a tool its author uses
+daily on Windows, there is no Linux or macOS machine here to test a build on, and
+nobody is asking for one. Code that cannot be run or tested is not support, it is
+a liability in every platform conditional.
+
+This file is the handover, not a plan. Nothing below is scheduled or intended;
+it is what someone would have to build if the need ever arrived, written down
+while it is still fresh. A separate fork is a reasonable home for either
+platform.
 
 ## macOS was never supported
 
@@ -32,7 +40,8 @@ everything after that: it was never built, never run and never tested, there is
 no `macx:` section configuring one, and nothing was ever written to make capture
 work there.
 
-A port's real work is therefore capture and permissions rather than hotkeys:
+If anyone ever did port it, the real work would be capture and permissions
+rather than hotkeys:
 
 - **Capture.** The `QScreen::grabWindow` fallback is not a screenshot tool's
   answer on a current macOS — it needs `ScreenCaptureKit`, and the user has to
@@ -44,7 +53,8 @@ A port's real work is therefore capture and permissions rather than hotkeys:
   a downloaded build will not open.
 
 Hotkeys are the one piece already present, by way of the vendored library. None
-of the rest has been investigated.
+of the rest has been investigated, and none of it can be tested here — there is
+no Mac to run it on.
 
 ## Linux was removed
 
