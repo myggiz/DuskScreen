@@ -7,6 +7,34 @@
 
 #include "hotkeymap.h"
 
+namespace {
+
+// QCOMPARE returns from the test function when it fails, so the restore cannot
+// sit at the end of the test body: it has to happen on the way out, however the
+// test leaves. KLF_SETFORPROCESS makes the change process-wide, so leaking it
+// would hand every later test a layout it did not ask for.
+class ProcessKeyboardLayout
+{
+public:
+    explicit ProcessKeyboardLayout(HKL layout)
+        : mPrevious(ActivateKeyboardLayout(layout, KLF_SETFORPROCESS)) {}
+
+    ~ProcessKeyboardLayout()
+    {
+        if (mPrevious) {
+            ActivateKeyboardLayout(mPrevious, KLF_SETFORPROCESS);
+        }
+    }
+
+    ProcessKeyboardLayout(const ProcessKeyboardLayout &) = delete;
+    ProcessKeyboardLayout &operator=(const ProcessKeyboardLayout &) = delete;
+
+private:
+    HKL mPrevious;
+};
+
+}
+
 void tst_HotkeyMap::namedKeysMapToTheirVirtualKey_data()
 {
     QTest::addColumn<int>("key");
@@ -33,25 +61,8 @@ void tst_HotkeyMap::namedKeysMapToTheirVirtualKey()
     QCOMPARE(QtKeyToWin(Qt::Key(key)), size_t(virtualKey));
 }
 
-// These four are main-row punctuation. Mapping them to the numeric-keypad
-// codes (VK_ADD, VK_SEPARATOR, VK_SUBTRACT, VK_DIVIDE) registered a keypad key
-// the user never pressed, and VK_SEPARATOR barely exists on real keyboards, so
-// that binding could not fire at all.
-void tst_HotkeyMap::mainRowPunctuationUsesOemCodes()
-{
-    QCOMPARE(QtKeyToWin(Qt::Key_Plus),  size_t(VK_OEM_PLUS));
-    QCOMPARE(QtKeyToWin(Qt::Key_Comma), size_t(VK_OEM_COMMA));
-    QCOMPARE(QtKeyToWin(Qt::Key_Minus), size_t(VK_OEM_MINUS));
-    QCOMPARE(QtKeyToWin(Qt::Key_Slash), size_t(VK_OEM_2));
-
-    QVERIFY(QtKeyToWin(Qt::Key_Plus)  != size_t(VK_ADD));
-    QVERIFY(QtKeyToWin(Qt::Key_Comma) != size_t(VK_SEPARATOR));
-    QVERIFY(QtKeyToWin(Qt::Key_Minus) != size_t(VK_SUBTRACT));
-    QVERIFY(QtKeyToWin(Qt::Key_Slash) != size_t(VK_DIVIDE));
-}
-
 // Qt::Key and the Windows virtual-key codes agree on letters and digits, which
-// is why the default branch returning the key unchanged works at all.
+// is why passing those through works.
 void tst_HotkeyMap::lettersAndDigitsFallThroughUnchanged_data()
 {
     QTest::addColumn<int>("key");
@@ -71,34 +82,102 @@ void tst_HotkeyMap::lettersAndDigitsFallThroughUnchanged()
     QCOMPARE(QtKeyToWin(Qt::Key(key)), size_t(virtualKey));
 }
 
-// DUSK-3. The remaining main-row punctuation is unmapped, so it reaches the
-// default branch and is returned as-is — and those Qt::Key values collide with
-// unrelated virtual keys. Each QEXPECT_FAIL states the mapping the key should
-// have; fixing DUSK-3 turns these into XPASS, which fails the run until the
-// markers are removed.
-void tst_HotkeyMap::unmappedPunctuationCollidesWithUnrelatedKeys()
+// Punctuation is resolved through the active keyboard layout, so the expected
+// value has to come from the same place rather than from a fixed table: the
+// virtual key behind ';' is VK_OEM_1 on a US layout and something else on most
+// others. What is asserted is that the mapping agrees with the layout.
+void tst_HotkeyMap::punctuationMatchesTheActiveLayout_data()
 {
-    QEXPECT_FAIL("", "DUSK-3: Qt::Key_Period is 0x2E, which is VK_DELETE", Continue);
-    QCOMPARE(QtKeyToWin(Qt::Key_Period), size_t(VK_OEM_PERIOD));
+    QTest::addColumn<int>("key");
 
-    QEXPECT_FAIL("", "DUSK-3: Qt::Key_Apostrophe is 0x27, which is VK_RIGHT", Continue);
+    for (const char c : {'.', ',', '-', '=', ';', '/', '\'', '[', ']', '\\', '`'}) {
+        QTest::newRow(QByteArray(1, c).constData()) << int(c);
+    }
+}
+
+void tst_HotkeyMap::punctuationMatchesTheActiveLayout()
+{
+    QFETCH(int, key);
+
+    const SHORT scan = VkKeyScanW(static_cast<wchar_t>(key));
+
+    if (scan == -1) {
+        QSKIP("this character is not on the active keyboard layout");
+    }
+
+    QCOMPARE(QtKeyToWin(Qt::Key(key)), size_t(scan & 0xFF));
+}
+
+// The test above can only prove the mapping agrees with the layout, not that it
+// agrees with the *right* layout. This one loads a known one and asserts the
+// documented US assignments, which are constants rather than a second call to
+// the function under test.
+//
+// The layout is activated for this thread only, so the desktop is unaffected.
+void tst_HotkeyMap::usLayoutProducesTheDocumentedOemCodes()
+{
+    const HKL us = LoadKeyboardLayoutW(L"00000409", KLF_NOTELLSHELL);
+
+    if (!us) {
+        QSKIP("the US keyboard layout is not installed");
+    }
+
+    const ProcessKeyboardLayout layout(us);
+
+    QCOMPARE(QtKeyToWin(Qt::Key_Period), size_t(VK_OEM_PERIOD));
+    QCOMPARE(QtKeyToWin(Qt::Key_Comma), size_t(VK_OEM_COMMA));
+    QCOMPARE(QtKeyToWin(Qt::Key_Minus), size_t(VK_OEM_MINUS));
+    QCOMPARE(QtKeyToWin(Qt::Key_Equal), size_t(VK_OEM_PLUS));
+    QCOMPARE(QtKeyToWin(Qt::Key_Semicolon), size_t(VK_OEM_1));
+    QCOMPARE(QtKeyToWin(Qt::Key_Slash), size_t(VK_OEM_2));
+    QCOMPARE(QtKeyToWin(Qt::Key_QuoteLeft), size_t(VK_OEM_3));
+    QCOMPARE(QtKeyToWin(Qt::Key_BracketLeft), size_t(VK_OEM_4));
+    QCOMPARE(QtKeyToWin(Qt::Key_Backslash), size_t(VK_OEM_5));
+    QCOMPARE(QtKeyToWin(Qt::Key_BracketRight), size_t(VK_OEM_6));
     QCOMPARE(QtKeyToWin(Qt::Key_Apostrophe), size_t(VK_OEM_7));
 
-    QEXPECT_FAIL("", "DUSK-3: Qt::Key_BracketLeft is 0x5B, which is VK_LWIN", Continue);
-    QCOMPARE(QtKeyToWin(Qt::Key_BracketLeft), size_t(VK_OEM_4));
+    // A key the US layout has no way to produce.
+    QCOMPARE(QtKeyToWin(Qt::Key_Aring), size_t(0));
+}
 
-    QEXPECT_FAIL("", "DUSK-3: Qt::Key_Backslash is 0x5C, which is VK_RWIN", Continue);
-    QCOMPARE(QtKeyToWin(Qt::Key_Backslash), size_t(VK_OEM_5));
+// '.' is on every layout, so this one is unconditional — and it is the key
+// DUSK-3 was reported against.
+void tst_HotkeyMap::periodResolvesToARealKey()
+{
+    const size_t period = QtKeyToWin(Qt::Key_Period);
 
-    QEXPECT_FAIL("", "DUSK-3: Qt::Key_BracketRight is 0x5D, which is VK_APPS", Continue);
-    QCOMPARE(QtKeyToWin(Qt::Key_BracketRight), size_t(VK_OEM_6));
+    QVERIFY(period != 0);
+    QCOMPARE(period, size_t(VkKeyScanW(L'.') & 0xFF));
+}
 
-    QEXPECT_FAIL("", "DUSK-3: Qt::Key_QuoteLeft is 0x60, which is VK_NUMPAD0", Continue);
-    QCOMPARE(QtKeyToWin(Qt::Key_QuoteLeft), size_t(VK_OEM_3));
+// DUSK-3: these Qt::Key values collide with unrelated virtual keys, and used to
+// be passed through onto them. No layout resolves punctuation to any of these,
+// so this holds everywhere.
+void tst_HotkeyMap::punctuationNoLongerGrabsUnrelatedKeys()
+{
+    QVERIFY(QtKeyToWin(Qt::Key_Period) != size_t(VK_DELETE));
+    QVERIFY(QtKeyToWin(Qt::Key_Apostrophe) != size_t(VK_RIGHT));
+    QVERIFY(QtKeyToWin(Qt::Key_BracketLeft) != size_t(VK_LWIN));
+    QVERIFY(QtKeyToWin(Qt::Key_Backslash) != size_t(VK_RWIN));
+    QVERIFY(QtKeyToWin(Qt::Key_BracketRight) != size_t(VK_APPS));
+    QVERIFY(QtKeyToWin(Qt::Key_QuoteLeft) != size_t(VK_NUMPAD0));
+}
 
-    QEXPECT_FAIL("", "DUSK-3: Qt::Key_Semicolon is 0x3B, an unassigned virtual key", Continue);
-    QCOMPARE(QtKeyToWin(Qt::Key_Semicolon), size_t(VK_OEM_1));
+// 0 is not a virtual key: it means "no mapping", and registerHotkey() fails the
+// binding rather than registering something that can never fire.
+void tst_HotkeyMap::unmappableKeysAreRefused_data()
+{
+    QTest::addColumn<int>("key");
 
-    QEXPECT_FAIL("", "DUSK-3: Qt::Key_Equal is 0x3D, an unassigned virtual key", Continue);
-    QCOMPARE(QtKeyToWin(Qt::Key_Equal), size_t(VK_OEM_PLUS));
+    QTest::newRow("unknown")   << int(Qt::Key_unknown);
+    QTest::newRow("Hangul")    << int(Qt::Key_Hangul);
+    QTest::newRow("Kana_Lock") << int(Qt::Key_Kana_Lock);
+    QTest::newRow("Massyo")    << int(Qt::Key_Massyo);
+}
+
+void tst_HotkeyMap::unmappableKeysAreRefused()
+{
+    QFETCH(int, key);
+
+    QCOMPARE(QtKeyToWin(Qt::Key(key)), size_t(0));
 }

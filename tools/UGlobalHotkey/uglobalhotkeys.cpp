@@ -63,7 +63,7 @@ bool UGlobalHotkeys::registerHotkey(const UKeySequence &keySeq, size_t id)
 #endif
 #if defined(Q_OS_WIN)
     size_t winMod = 0;
-    size_t key = VK_F2;
+    size_t key = 0;
 
     for (size_t i = 0; i != keySeq.size(); i++) {
         if (keySeq[i] == Qt::Key_Control) {
@@ -77,6 +77,15 @@ bool UGlobalHotkeys::registerHotkey(const UKeySequence &keySeq, size_t id)
         } else {
             key = QtKeyToWin(keySeq[i]);
         }
+    }
+
+    // No key, or one QtKeyToWin has no mapping for. RegisterHotKey accepts
+    // virtual key 0 and registers a hotkey that nothing can ever trigger, so
+    // refusing it here is what turns an unusable binding into a reported
+    // failure. This default was VK_F2, which silently grabbed Ctrl+F2 for a
+    // sequence that named no key at all.
+    if (key == 0) {
+        return false;
     }
 
     if (!RegisterHotKey((HWND)winId(), id, winMod, key)) {

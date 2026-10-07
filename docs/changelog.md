@@ -16,6 +16,16 @@ up to and including 1.0.14. Work tracked after that lives in Linear.
 
 ### Fixed
 
+- **Hotkeys on punctuation keys register the key you actually pressed.** `Ctrl+.`
+  grabbed `Ctrl+Delete` system-wide — so Ctrl+Delete stopped reaching other
+  programs — and `[`, `]` and `\` grabbed the Windows and menu keys. The virtual
+  key now comes from the active keyboard layout instead of a fixed table, so
+  punctuation also works on layouts other than US: on a Swedish keyboard `/` was
+  binding the `'` key. Characters that only exist outside ASCII, such as `å`,
+  `ä` and `ö`, can now be bound at all.
+- A hotkey DuskScreen cannot map is reported as not registered, rather than
+  silently grabbing an unrelated key. A stored hotkey naming no key at all used
+  to grab `Ctrl+F2`.
 - Escape and the title-bar close button now dismiss the quit confirmation
   instead of being ignored; both answer "Don't Quit", and "Quit" is still the
   default button (#88).
