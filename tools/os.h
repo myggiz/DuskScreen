@@ -28,11 +28,6 @@ class QUrl;
 class QGraphicsEffect;
 class QIcon;
 
-#if defined(Q_OS_LINUX)
-    typedef unsigned long XID;
-    typedef XID Window;
-#endif
-
 namespace os {
 // Returns the cursor pixmap in Windows
 QPair<QPixmap, QPoint> cursor();
@@ -49,17 +44,11 @@ QPixmap grabWindow(WId winId);
 // Set the target window as the foreground window (Windows only)
 void setForegroundWindow(QWidget *window);
 
-// Adds lightscreen to the startup list in Windows & Linux (KDE, Gnome and Xfce for now).
+// Adds DuskScreen to the Windows startup list.
 void setStartup(bool startup, bool hide);
 
 // Returns a QIcon for the given icon name (taking into account color schemes and whatnot).
 QIcon icon(const QString &name, QColor backgroundColor = QColor());
-
-// X11-specific functions for the Window Picker
-#if defined(Q_OS_LINUX)
-    Window findRealWindow(Window w, int depth = 0);
-    Window windowUnderCursor(bool includeDecorations = true);
-#endif
 }
 
 // qAsConst backport

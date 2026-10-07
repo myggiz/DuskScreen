@@ -26,7 +26,6 @@
 #include <QtConcurrent>
 #include <QFutureWatcher>
 #include <QProcess>
-#include <QStandardPaths>
 #include <QTextStream>
 #include <QScreen>
 #include <QStringBuilder>
@@ -41,13 +40,6 @@
 
 #ifdef Q_OS_WIN
     #include <windows.h>
-#endif
-
-#ifdef Q_OS_LINUX
-    #include <QtGui/qguiapplication_platform.h>
-    #include <X11/X.h>
-    #include <X11/Xlib.h>
-    #undef Success
 #endif
 
 Screenshot::Screenshot(QObject *parent, Screenshot::Options options):
@@ -200,11 +192,7 @@ void Screenshot::optimize()
 
     QString optiPNG;
 
-#ifdef Q_OS_UNIX
-    optiPNG = QStandardPaths::findExecutable("optipng");
-#else
     optiPNG = qApp->applicationDirPath() % QDir::separator() % "optipng.exe";
-#endif
 
     if (optiPNG.isEmpty() || !QFile::exists(optiPNG)) {
         optimizationDone();
@@ -439,20 +427,6 @@ void Screenshot::activeWindow()
     }
 
     mPixmap = os::grabWindow((WId)GetForegroundWindow());
-#endif
-
-#if defined(Q_OS_LINUX)
-    auto *x11app = qGuiApp->nativeInterface<QNativeInterface::QX11Application>();
-
-    if (x11app) {
-        Window focus;
-        int revert;
-
-        XGetInputFocus(x11app->display(), &focus, &revert);
-
-        mPixmap = QGuiApplication::primaryScreen()->grabWindow(focus);
-    }
-    // else: non-X11 (Wayland) — capture path is a separate future effort; leave mPixmap empty.
 #endif
 }
 

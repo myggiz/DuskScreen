@@ -175,11 +175,9 @@ void DuskScreenWindow::cleanup(const Screenshot::Options &options)
 {
     // Reversing settings
     if (settings()->value("options/hide").toBool()) {
-#ifndef Q_OS_LINUX // X is not quick enough and the notification ends up everywhere but in the icon
         if (settings()->value("options/tray").toBool() && mTrayIcon) {
             mTrayIcon->show();
         }
-#endif
 
         if (mWasVisible) {
             show();
@@ -423,11 +421,9 @@ void DuskScreenWindow::screenshotAction(Screenshot::Mode mode, bool delayed)
     if (optionsHide) {
         hide();
 
-#ifndef Q_OS_LINUX // X is not quick enough and the notification ends up everywhere but in the icon
         if (mTrayIcon) {
             mTrayIcon->hide();
         }
-#endif
     }
 
     // Screenshot delay. The 400ms is unconditional: it gives hide() time to take

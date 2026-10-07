@@ -54,7 +54,7 @@ AreaDialog::AreaDialog(Screenshot *screenshot) :
 
     setMouseTracking(true);
     setWindowTitle(tr("DuskScreen Area Mode"));
-    setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::X11BypassWindowManagerHint);
+    setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
 
     setCursor(Qt::CrossCursor);
 

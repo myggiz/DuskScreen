@@ -14,6 +14,17 @@ up to and including 1.0.14. Work tracked after that lives in Linear.
 
 ## [Unreleased]
 
+### Removed
+
+- **Linux and X11 support.** DuskScreen is a Windows application. The tree had
+  compiled on Linux since 1.0.5, but capture returned nothing on Wayland, global
+  hotkeys were unreliable, and the window picker did not work — it was
+  groundwork, never support. Making it real needs a different capture and input
+  stack, so the half-working code is gone rather than sitting in every platform
+  conditional. What was removed and what Linux would actually require is written
+  up in [docs/linux.md](linux.md). The Windows binary is byte-for-byte identical
+  either way.
+
 ### Fixed
 
 - **Hotkeys on punctuation keys register the key you actually pressed.** `Ctrl+.`

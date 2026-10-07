@@ -86,13 +86,6 @@ bool NamingDialog::eventFilter(QObject *object, QEvent *event)
             return true;
         }
 #endif
-
-#ifdef Q_OS_UNIX
-        if (keyEvent->text().contains("/")) {
-            event->ignore();
-            return true;
-        }
-#endif
     }
 
     return QDialog::eventFilter(object, event);
