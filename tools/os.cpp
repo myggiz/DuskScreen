@@ -42,7 +42,6 @@
 #include <QPainter>
 #include <QPair>
 #include <QStringBuilder>
-#include <QDebug>
 
 #ifdef Q_OS_WIN
     #include <qt_windows.h>
@@ -52,12 +51,6 @@
     #ifndef SM_CXPADDEDBORDER
         #define SM_CXPADDEDBORDER 92
     #endif
-#elif defined(Q_OS_LINUX)
-    #include <QtGui/qguiapplication_platform.h>
-    #include <X11/X.h>
-    #include <X11/Xlib.h>
-    #include <X11/Xutil.h>
-    #include <X11/Xatom.h>
 #endif
 
 #include <tools/os.h>
@@ -352,31 +345,6 @@ void os::setStartup(bool startup, bool hide)
     init.endGroup();
     init.endGroup();
 #endif
-
-#if defined(Q_OS_LINUX)
-    const QString autostartDir = QDir::homePath() + "/.config/autostart";
-    QFile desktopFile(autostartDir + "/duskscreen.desktop");
-
-    desktopFile.remove();
-
-    if (startup) {
-        // QFile won't create missing directories, and ~/.config/autostart often
-        // doesn't exist until something puts an entry there — so without this the
-        // open below simply failed and the setting appeared to do nothing.
-        if (!QDir().mkpath(autostartDir)) {
-            qWarning() << "Could not create the autostart directory:" << autostartDir;
-            return;
-        }
-
-        if (desktopFile.open(QIODevice::WriteOnly)) {
-            // UTF-8, not Latin-1: the spec requires it, and toLatin1() silently
-            // mangles any non-Latin-1 character in the install path.
-            desktopFile.write(QString("[Desktop Entry]\nExec=%1\nType=Application\n").arg(lightscreen).toUtf8());
-        } else {
-            qWarning() << "Could not write the autostart entry:" << desktopFile.fileName();
-        }
-    }
-#endif
 }
 
 
@@ -393,93 +361,3 @@ QIcon os::icon(const QString &name, QColor backgroundColor)
     }
 }
 
-#ifdef Q_OS_LINUX
-// X11 display handle for the current QGuiApplication, or nullptr when the
-// platform plugin isn't xcb (e.g. Wayland). The window-picker / active-window
-// helpers below are X11-only, mirroring their pre-Qt6 behavior (which used
-// the now-removed Qt5 X11Extras display accessor).
-static Display *x11Display()
-{
-    auto *x11app = qGuiApp->nativeInterface<QNativeInterface::QX11Application>();
-    return x11app ? x11app->display() : nullptr;
-}
-
-// Taken from KSnapshot. Oh KDE, what would I do without you :D
-Window os::findRealWindow(Window w, int depth)
-{
-    if (depth > 5) {
-        return None;
-    }
-
-    if (!x11Display()) {
-        return None;  // non-X11 (e.g. Wayland): no X11 window tree to query
-    }
-
-    static Atom wm_state = XInternAtom(x11Display(), "WM_STATE", False);
-    Atom type;
-    int format;
-    unsigned long nitems, after;
-    unsigned char *prop;
-
-    if (XGetWindowProperty(x11Display(), w, wm_state, 0, 0, False, AnyPropertyType,
-                           &type, &format, &nitems, &after, &prop) == Success) {
-        if (prop != nullptr) {
-            XFree(prop);
-        }
-
-        if (type != None) {
-            return w;
-        }
-    }
-
-    Window root, parent;
-    Window *children;
-    unsigned int nchildren;
-    Window ret = None;
-
-    if (XQueryTree(x11Display(), w, &root, &parent, &children, &nchildren) != 0) {
-        for (unsigned int i = 0;
-                i < nchildren && ret == None;
-                ++i) {
-            ret = os::findRealWindow(children[ i ], depth + 1);
-        }
-
-        if (children != nullptr) {
-            XFree(children);
-        }
-    }
-
-    return ret;
-}
-
-Window os::windowUnderCursor(bool includeDecorations)
-{
-    Window root;
-    Window child;
-    uint mask;
-    int rootX, rootY, winX, winY;
-    Display *display = x11Display();
-
-    if (!display) {
-        return None;  // non-X11 (e.g. Wayland): no pointer/root window to query
-    }
-
-    Window rootWindow = DefaultRootWindow(display);
-
-    XQueryPointer(display, rootWindow, &root, &child,
-                  &rootX, &rootY, &winX, &winY, &mask);
-
-    if (child == None) {
-        child = rootWindow;
-    }
-
-    if (!includeDecorations) {
-        // Callers that ask for a real window want a pickable client, not the
-        // root: grabbing the root yields the whole desktop, which is not what
-        // the window picker was asked for. Report "nothing here" instead.
-        return os::findRealWindow(child);
-    }
-
-    return child;
-}
-#endif

@@ -9,6 +9,10 @@ ported to **Qt 6** and slimmed down to a focused capture-to-disk tool.
 
 What changed in each version is in [the changelog](docs/changelog.md).
 
+DuskScreen is Windows-only. It used to carry Linux and X11 code; why that was
+removed, and what another platform would actually require, is in
+[docs/platforms.md](docs/platforms.md).
+
 ## What's different from upstream Lightscreen
 
 - **Ported to Qt 6** (builds against Qt 6.11 / MinGW). Every removed-in-Qt6 API was

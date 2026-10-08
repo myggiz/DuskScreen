@@ -63,8 +63,6 @@ windows {
     #QMAKE_CXXFLAGS_DEBUG += /analyze /W3 /wd6326
 }
 
-unix:LIBS += -lX11
-
 include (version.pri)
 
 OTHER_FILES += TODO.txt

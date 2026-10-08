@@ -56,26 +56,6 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     ui.setupUi(this);
     setModal(true);
 
-#if defined(Q_OS_LINUX)
-    // KDE-specific style tweaks.
-    if (qApp->style()->objectName() == "oxygen") {
-        ui.browsePushButton->setMaximumWidth(30);
-        ui.namingOptionsButton->setMaximumWidth(30);
-
-        ui.fileGroupBox->setFlat(false);
-        ui.startupGroupBox->setFlat(false);
-        ui.capturesGroupBox->setFlat(false);
-        ui.controlGroupBox->setFlat(false);
-        ui.interfaceGroupBox->setFlat(false);
-        ui.screenshotsGroupBox->setFlat(false);
-        ui.updaterGroupBox->setFlat(false);
-        ui.clipboardGroupBox->setFlat(false);
-
-        ui.optionsTab->layout()->setContentsMargins(0, 0, 6, 0);
-        ui.aboutTab->layout()->setContentsMargins(8, 8, 8, 8);
-    }
-#endif
-
     setEnabled(false); // We disable the widgets to prevent any user interaction until the settings have loaded.
     QMetaObject::invokeMethod(this, "init"        , Qt::QueuedConnection);
     QMetaObject::invokeMethod(this, "loadSettings", Qt::QueuedConnection);
@@ -255,20 +235,6 @@ void OptionsDialog::loadSettings()
         ui.optiPngCheckBox->setEnabled(false);
         ui.optiPngLabel->setText("optipng.exe not found");
     }
-#elif defined(Q_OS_LINUX)
-    if (QStandardPaths::findExecutable("optipng").isEmpty()) {
-        ui.optiPngCheckBox->setChecked(false);
-        ui.optiPngCheckBox->setEnabled(false);
-        ui.optiPngLabel->setText(tr("Install 'OptiPNG'"));
-    }
-
-    //TODO: Sound cue support on Linux
-    ui.playSoundCheckBox->setVisible(false);
-    ui.playSoundCheckBox->setChecked(false);
-
-    //TODO: Cursor support on X11
-    ui.cursorCheckBox->setVisible(false);
-    ui.cursorCheckBox->setChecked(false);
 #endif
     settings()->endGroup();
 
