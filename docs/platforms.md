@@ -117,7 +117,9 @@ picking each need a portal, and one of them has no portal at all.
 ### The defects that were recorded against it
 
 These were open issues when Linux was dropped. They are cancelled rather than
-fixed, and are kept in Linear for whoever picks this up:
+fixed, and are kept in Linear for whoever picks this up — all six carry the
+`future` label, which is retained for exactly that purpose, so filtering the
+DuskScreen team by it finds the set without relying on the IDs below:
 
 | Issue | Problem |
 |---|---|
